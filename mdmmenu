@@ -1,5 +1,5 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "shaka do 7 acabano com o mc", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
+local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
 
 local players = game:GetService("Players")
 
