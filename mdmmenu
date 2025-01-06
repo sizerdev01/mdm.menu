@@ -145,7 +145,7 @@ local function createESPName(player)
     nameLabel.Size = UDim2.new(1, 0, 1, 0)
     nameLabel.BackgroundTransparency = 1
     nameLabel.TextColor3 = Color3.new(1, 1, 1) -- Branco
-    nameLabel.TextStrokeTransparency = 0.2 -- Contorno preto leve
+    nameLabel.TextStrokeTransparency = 0.4 -- Contorno preto leve
     nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0) -- Preto
     nameLabel.Font = Enum.Font.SourceSansBold
     nameLabel.TextSize = nameSize -- Tamanho da fonte controlado pela slider
@@ -178,7 +178,7 @@ end)
 
 -- Toggle para ativar/desativar o farm
 FarmTab:AddToggle({
-    Name = "Farm Ativado",
+    Name = "FarmBad",
     Default = false, -- Estado inicial desativado
     Callback = function(Value)
         isFarmActive = Value
@@ -275,7 +275,7 @@ _G.CircleColor = Color3.fromRGB(255, 255, 255) -- cor circ
 _G.CircleTransparency = 0.7 -- transparencia circ
 _G.CircleRadius = 80 -- raio do circulo/ fov
 _G.CircleFilled = false -- circulo preenchido ou nao
-_G.CircleVisible = true -- circulo visivel
+_G.CircleVisible = false -- circulo visivel
 _G.CircleThickness = 0 -- espressura
 
 local FOVCircle = Drawing.new("Circle")
