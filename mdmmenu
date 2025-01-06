@@ -360,13 +360,6 @@ PVPTab:AddToggle({
         end
     end
 })
--- rageaim + fov
-   if _G.AimbotEnabled then
-    _G.CircleVisible = true
-else
-    _G.CircleVisible = false
-end
-
 -- Inicia o monitoramento do farm
 spawn(monitorLixos)
 
