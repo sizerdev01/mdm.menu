@@ -1,1 +1,158 @@
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "shaka do 7 acabano com o mc", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
+
+local players = game:GetService("Players")
+
+local nameSize = 27 -- Tamanho padrão do ESP Name
+local highlightColor = Color3.new(1, 0, 0) -- Cor do Highlight alterada para Vermelho
+local fillTransparency = 1 -- Transparência da parte interna (1 = invisível)
+local outlineTransparency = 0 -- Transparência do contorno (0 = totalmente visível)
+
+-- Função para criar ESP Name (NameTag)
+local function createESPName(player)
+    local character = player.Character or player.CharacterAdded:Wait()
+    if character:FindFirstChild("ESPName") then return end -- Evita duplicação
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Name = "ESPName"
+    billboardGui.Adornee = character:WaitForChild("Head")
+    billboardGui.Size = UDim2.new(27, 0, 2, 0) -- Tamanho do ESP
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+    billboardGui.AlwaysOnTop = true
+    
+    local nameLabel = Instance.new("TextLabel", billboardGui)
+    nameLabel.Text = player.Name
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextColor3 = Color3.new(1, 1, 1) -- Branco
+    nameLabel.TextStrokeTransparency = 0.2 -- Contorno preto leve
+    nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0) -- Preto
+    nameLabel.Font = Enum.Font.SourceSansBold
+    nameLabel.TextSize = nameSize -- Tamanho da fonte
+    nameLabel.TextScaled = false
+    
+    billboardGui.Parent = character
+end
+
+-- Função para aplicar highlight no personagem
+local function applyHighlight(character)
+    if character:FindFirstChildOfClass("Highlight") then return end -- Evita duplicação
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = highlightColor
+    highlight.FillTransparency = fillTransparency
+    highlight.OutlineTransparency = outlineTransparency
+    highlight.OutlineColor = highlightColor
+    highlight.Adornee = character
+    highlight.Parent = character
+end
+
+-- Função para monitorar e aplicar highlight continuamente
+local function highlightAllPlayers()
+    while true do
+        for _, player in ipairs(players:GetPlayers()) do
+            if player ~= players.LocalPlayer then
+                local character = player.Character or player.CharacterAdded:Wait()
+                applyHighlight(character)
+            end
+        end
+        wait(3) -- Verifica a cada 3 segundos
+    end
+end
+
+-- Função para monitorar e criar ESP Name continuamente
+local function monitorESP()
+    while true do
+        for _, player in ipairs(players:GetPlayers()) do
+            if player ~= players.LocalPlayer then
+                local character = player.Character or player.CharacterAdded:Wait()
+                createESPName(player)
+            end
+        end
+        wait(3)
+    end
+end
+
+players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        createESPName(player)
+        applyHighlight(character)
+    end)
+end)
+
+-- Função para adicionar as opções de Toggle ESP Name e Highlight na GUI
+local PVPTab = Window:MakeTab({
+    Name = "PVP",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+PVPTab:AddToggle({
+    Name = "ESP Name",
+    Default = false, -- Estado inicial desativado
+    Callback = function(Value)
+        if Value then
+            spawn(monitorESP) -- Inicia o monitoramento do ESP Name
+            print("ESP Name ativado")
+        else
+            -- Remove o ESP Name de todos os jogadores
+            for _, player in ipairs(players:GetPlayers()) do
+                local character = player.Character or player.CharacterAdded:Wait()
+                local espName = character:FindFirstChild("ESPName")
+                if espName then
+                    espName:Destroy()
+                end
+            end
+            print("ESP Name desativado")
+        end
+    end
+})
+
+PVPTab:AddToggle({
+    Name = "Highlight",
+    Default = false, -- Estado inicial desativado
+    Callback = function(Value)
+        if Value then
+            spawn(highlightAllPlayers) -- Inicia o monitoramento do Highlight
+            print("Highlight ativado")
+        else
+            -- Remove o Highlight de todos os jogadores
+            for _, player in ipairs(players:GetPlayers()) do
+                local character = player.Character or player.CharacterAdded:Wait()
+                local highlight = character:FindFirstChildOfClass("Highlight")
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+            print("Highlight desativado")
+        end
+    end
+})
+
+-- Slider para ajustar o tamanho do nome no ESP
+PVPTab:AddSlider({
+    Name = "Tamanho do ESP Name",
+    Min = 15,
+    Max = 34,
+    Default = 27,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "Tamanho",
+    Callback = function(Value)
+        nameSize = Value
+        -- Atualiza o tamanho de todos os ESP Names existentes
+        for _, player in ipairs(players:GetPlayers()) do
+            local character = player.Character or player.CharacterAdded:Wait()
+            local espName = character:FindFirstChild("ESPName")
+            if espName then
+                local nameLabel = espName:FindFirstChild("TextLabel")
+                if nameLabel then
+                    nameLabel.TextSize = nameSize
+                end
+            end
+        end
+        print("Tamanho do nome ajustado para: " .. nameSize)
+    end
+})
+
+-- Inicializa a biblioteca OrionLib
+OrionLib:Init()
 
