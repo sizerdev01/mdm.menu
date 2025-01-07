@@ -24,7 +24,7 @@ local function createESPName(player)
     billboardGui.Size = UDim2.new(27, 0, 2, 0) -- Tamanho do ESP
     billboardGui.StudsOffset = Vector3.new(0, 3, 0)
     billboardGui.AlwaysOnTop = true
-    
+
     local nameLabel = Instance.new("TextLabel", billboardGui)
     nameLabel.Text = player.Name
     nameLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -35,7 +35,7 @@ local function createESPName(player)
     nameLabel.Font = Enum.Font.SourceSansBold
     nameLabel.TextSize = nameSize -- Tamanho da fonte
     nameLabel.TextScaled = false
-    
+
     billboardGui.Parent = character
 end
 
@@ -191,6 +191,21 @@ FarmTab:AddToggle({
     end
 })
 
+FarmTab:AddButton({
+    Name = "TPfarm",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local targetCFrame = CFrame.new(1129.86682, 18.493576, -2082.05591, -1, 0, 0, 0, 1, 0, 0, 0, -1)
+        if character then
+            character:SetPrimaryPartCFrame(targetCFrame)
+            print("Teleporte para o local de farm realizado.")
+        else
+            print("Personagem não encontrado.")
+        end
+    end
+})
+
 -- Função para adicionar as opções de Toggle ESP Name, Highlight e Hitbox na GUI
 local PVPTab = Window:MakeTab({
     Name = "PVP",
@@ -295,3 +310,4 @@ PVPTab:AddSlider({
 })
 
 OrionLib:Init()
+
