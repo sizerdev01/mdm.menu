@@ -51,36 +51,34 @@ local function applyHighlight(character)
     highlight.Parent = character
 end
 
--- Função para monitorar e aplicar highlight continuamente
+-- Função para monitorar e aplicar highlight continuamente em todos os jogadores
 local function highlightAllPlayers()
-    while true do
-        for _, player in ipairs(players:GetPlayers()) do
-            if player ~= players.LocalPlayer then
-                local character = player.Character or player.CharacterAdded:Wait()
-                applyHighlight(character)
-            end
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= players.LocalPlayer then
+            local character = player.Character or player.CharacterAdded:Wait()
+            applyHighlight(character)
         end
-        wait(3) -- Verifica a cada 3 segundos
     end
 end
 
--- Função para monitorar e criar ESP Name continuamente
+-- Função para monitorar e criar ESP Name continuamente em todos os jogadores
 local function monitorESP()
-    while true do
-        for _, player in ipairs(players:GetPlayers()) do
-            if player ~= players.LocalPlayer then
-                local character = player.Character or player.CharacterAdded:Wait()
-                createESPName(player)
-            end
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= players.LocalPlayer then
+            local character = player.Character or player.CharacterAdded:Wait()
+            createESPName(player)
         end
-        wait(3)
     end
 end
 
 players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
-        createESPName(player)
-        applyHighlight(character)
+        if isESPNameActive then
+            createESPName(player)
+        end
+        if isHighlightActive then
+            applyHighlight(character)
+        end
     end)
 end)
 
@@ -110,12 +108,15 @@ local function toggleHitbox()
                 end
             end
         else
-            -- Se a hitbox estiver desativada, restaura o tamanho normal
+            -- Se a hitbox estiver desativada, remove o bloco azul
             for _, player in ipairs(game:GetService('Players'):GetPlayers()) do
                 if player.Character then
                     local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
                     if humanoidRootPart then
                         humanoidRootPart.Size = Vector3.new(2, 2, 2)  -- Restaura o tamanho original da hitbox
+                        humanoidRootPart.BrickColor = BrickColor.new("Bright blue") -- Restaura a cor
+                        humanoidRootPart.Material = Enum.Material.SmoothPlastic -- Restaura o material
+                        humanoidRootPart.Transparency = 1 -- Restaura a transparência
                     end
                 end
             end
@@ -177,7 +178,7 @@ local FarmTab = Window:MakeTab({
 })
 
 FarmTab:AddToggle({
-    Name = "farm drogas",
+    Name = "Ativar Farm",
     Default = false,
     Callback = function(Value)
         isFarmActive = Value
@@ -197,12 +198,14 @@ local PVPTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+local isESPNameActive = false
 PVPTab:AddToggle({
     Name = "ESP Name",
     Default = false,
     Callback = function(Value)
-        if Value then
-            spawn(monitorESP)
+        isESPNameActive = Value
+        if isESPNameActive then
+            monitorESP()
             print("ESP Name ativado")
         else
             for _, player in ipairs(players:GetPlayers()) do
@@ -217,12 +220,14 @@ PVPTab:AddToggle({
     end
 })
 
+local isHighlightActive = false
 PVPTab:AddToggle({
     Name = "Highlight",
     Default = false,
     Callback = function(Value)
-        if Value then
-            spawn(highlightAllPlayers)
+        isHighlightActive = Value
+        if isHighlightActive then
+            highlightAllPlayers()
             print("Highlight ativado")
         else
             for _, player in ipairs(players:GetPlayers()) do
@@ -252,7 +257,7 @@ PVPTab:AddToggle({
 })
 
 PVPTab:AddSlider({
-    Name = "tamanho da Hitbox",
+    Name = "Tamanho da Hitbox",
     Min = 10,
     Max = 50,
     Default = 20,
@@ -266,7 +271,7 @@ PVPTab:AddSlider({
 })
 
 PVPTab:AddSlider({
-    Name = "tamanho do ESP Name",
+    Name = "Tamanho do ESP Name",
     Min = 15,
     Max = 34,
     Default = 27,
