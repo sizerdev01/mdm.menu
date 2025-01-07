@@ -53,8 +53,16 @@ local function monitorAllPlayersESP()
     for _, player in ipairs(players:GetPlayers()) do
         if player ~= players.LocalPlayer then
             local character = player.Character or player.CharacterAdded:Wait()
-            createESPName(player)
             applyHighlight(character)
+        end
+    end
+end
+
+local function monitorAllPlayersESPName()
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= players.LocalPlayer then
+            local character = player.Character or player.CharacterAdded:Wait()
+            createESPName(player)
         end
     end
 end
@@ -184,6 +192,7 @@ FarmTab:AddButton({
         end
     end
 })
+
 local PVPTab = Window:MakeTab({
     Name = "Player",
     Icon = "rbxassetid://4483345998",
@@ -197,7 +206,7 @@ PVPTab:AddToggle({
     Callback = function(Value)
         isESPNameActive = Value
         if isESPNameActive then
-            monitorAllPlayersESP()
+            monitorAllPlayersESPName()
             print("ESP Name ativado ")
         else
             for _, player in ipairs(players:GetPlayers()) do
@@ -224,7 +233,7 @@ PVPTab:AddToggle({
         else
             for _, player in ipairs(players:GetPlayers()) do
                 local character = player.Character
-                local highlight = character and character:FindFirstChildOfClass("ESP")
+                local highlight = character and character:FindFirstChildOfClass("Highlight")
                 if highlight then
                     highlight:Destroy()
                 end
@@ -285,6 +294,7 @@ PVPTab:AddSlider({
         print("ESP name tamanho foi para: " .. nameSize)
     end
 })
+
 local TeleportTab = Window:MakeTab({
     Name = "Teleports",
     Icon = "rbxassetid://4483345998",
