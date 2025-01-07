@@ -2,18 +2,42 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
 local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
 
 local players = game:GetService("Players")
-local runService = game:GetService("RunService")
 
-local nameSize = 27 
-local highlightColor = Color3.new(1, 0, 0)
-local fillTransparency = 1 
-local outlineTransparency = 0 
+local nameSize = 27 -- Tamanho padrão do ESP Name
+local highlightColor = Color3.new(1, 0, 0) -- Cor do Highlight alterada para Vermelho
+local fillTransparency = 1 -- Transparência da parte interna (1 = invisível)
+local outlineTransparency = 0 -- Transparência do contorno (0 = totalmente visível)
 
-local HeadSize = 20 
-local IsHitboxActive = false 
-local IsTeamCheckEnabled = false
-local isFarmActive = false
+local isFarmActive = false  -- Estado do farm
 
+local camera = game:GetService("Workspace").CurrentCamera
+
+-- staff
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local teamName = "STAFF"  -- Nome do time a ser verificado
+local isCheckActive = false  -- Estado do toggle
+
+local function checkStaffTeam()
+    -- Verifica se algum jogador no time "STAFF" existe
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Team and player.Team.Name == teamName then
+            -- Se encontrar um jogador na equipe STAFF, kicka o jogador local
+            localPlayer:Kick("Você foi kickado porque há um jogador na equipe STAFF.")
+            return
+        end
+    end
+end
+
+local function startChecking()
+    -- Verifica a presença de jogadores no time "STAFF" a cada 5 segundos
+    while isCheckActive do
+        checkStaffTeam()
+        wait(5)
+    end
+end
+
+-- Função para criar ESP Name (NameTag)
 local function createESPName(player)
     local character = player.Character or player.CharacterAdded:Wait()
     if character:FindFirstChild("ESPName") then return end
@@ -23,7 +47,7 @@ local function createESPName(player)
     billboardGui.Size = UDim2.new(nameSize / 10, 0, 2, 0)
     billboardGui.StudsOffset = Vector3.new(0, 3, 0)
     billboardGui.AlwaysOnTop = true
-
+    
     local nameLabel = Instance.new("TextLabel", billboardGui)
     nameLabel.Text = player.Name
     nameLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -33,6 +57,7 @@ local function createESPName(player)
     nameLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
     nameLabel.Font = Enum.Font.SourceSansBold
     nameLabel.TextSize = nameSize
+    nameLabel.TextScaled = false
 
     billboardGui.Parent = character
 end
@@ -48,39 +73,23 @@ local function applyHighlight(character)
     highlight.Parent = character
 end
 
-local function toggleHitbox()
-    if IsHitboxActive then
-        for _, player in ipairs(players:GetPlayers()) do
-            if player ~= players.LocalPlayer then
-                local character = player.Character
-                local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    humanoidRootPart.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
-                    humanoidRootPart.BrickColor = BrickColor.new("Really blue")
-                    humanoidRootPart.Material = Enum.Material.Neon
-                    humanoidRootPart.CanCollide = false
-                    humanoidRootPart.Transparency = 0.8
-                end
-            end
-        end
-    else
-        for _, player in ipairs(players:GetPlayers()) do
-            local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart then
-                humanoidRootPart.Size = Vector3.new(2, 2, 2)
-                humanoidRootPart.BrickColor = BrickColor.new("Bright blue")
-                humanoidRootPart.Material = Enum.Material.SmoothPlastic
-                humanoidRootPart.Transparency = 1
-            end
+local function monitorAllPlayersESP()
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= players.LocalPlayer then
+            local character = player.Character or player.CharacterAdded:Wait()
+            applyHighlight(character)
         end
     end
 end
 
-runService.RenderStepped:Connect(function()
-    if IsHitboxActive then
-        toggleHitbox()
+local function monitorAllPlayersESPName()
+    for _, player in ipairs(players:GetPlayers()) do
+        if player ~= players.LocalPlayer then
+            local character = player.Character or player.CharacterAdded:Wait()
+            createESPName(player)
+        end
     end
-end)
+end
 
 players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
@@ -107,7 +116,10 @@ local function teleportarJogadorAleatoriamente()
     if #stems > 0 then
         local stemAleatorio = stems[math.random(1, #stems)]
         if stemAleatorio and players.LocalPlayer.Character then
-            players.LocalPlayer.Character:SetPrimaryPartCFrame(stemAleatorio.CFrame)
+            local humanoide = players.LocalPlayer.Character:FindFirstChild("Humanoid")
+            if humanoide then
+                players.LocalPlayer.Character:SetPrimaryPartCFrame(stemAleatorio.CFrame)
+            end
         end
     else
         print("Nenhum 'Stem' encontrado.")
@@ -134,30 +146,6 @@ local function loopFarm()
     end
 end
 
-local FarmTab = Window:MakeTab({
-    Name = "Farm",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-FarmTab:AddToggle({
-    Name = "auto drogas",
-    Default = false,
-    Callback = function(Value)
-        isFarmActive = Value
-        if isFarmActive then
-            spawn(loopFarm)
-        end
-    end
-})
-
-FarmTab:AddButton({
-    Name = "TP ilegal",
-    Callback = function()
-        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(1129.86682, 18.493576, -2082.05591))
-    end
-})
-
 local PVPTab = Window:MakeTab({
     Name = "Player",
     Icon = "rbxassetid://4483345998",
@@ -171,9 +159,8 @@ PVPTab:AddToggle({
     Callback = function(Value)
         isESPNameActive = Value
         if isESPNameActive then
-            for _, player in ipairs(players:GetPlayers()) do
-                createESPName(player)
-            end
+            monitorAllPlayersESPName()
+            print("ESP Name ativado ")
         else
             for _, player in ipairs(players:GetPlayers()) do
                 local character = player.Character
@@ -182,20 +169,8 @@ PVPTab:AddToggle({
                     espName:Destroy()
                 end
             end
+            print("ESP Name desativado")
         end
-    end
-})
-
-PVPTab:AddSlider({
-    Name = "Slider ESPname",
-    Min = 15,
-    Max = 34,
-    Default = 27,
-    Color = Color3.fromRGB(255, 255, 255),
-    Increment = 1,
-    ValueName = "Tamanho",
-    Callback = function(Value)
-        nameSize = Value
     end
 })
 
@@ -206,9 +181,8 @@ PVPTab:AddToggle({
     Callback = function(Value)
         isHighlightActive = Value
         if isHighlightActive then
-            for _, player in ipairs(players:GetPlayers()) do
-                applyHighlight(player.Character)
-            end
+            monitorAllPlayersESP()
+            print("ESP ativado")
         else
             for _, player in ipairs(players:GetPlayers()) do
                 local character = player.Character
@@ -217,28 +191,86 @@ PVPTab:AddToggle({
                     highlight:Destroy()
                 end
             end
+            print("ESP desativado")
         end
     end
 })
 
-PVPTab:AddToggle({
-    Name = "Hitbox",
-    Default = false,
+-- Adicionando Dropdown para jogadores
+local playerList = {}
+for _, player in ipairs(players:GetPlayers()) do
+    table.insert(playerList, player.Name)
+end
+
+local playerDropdown = ""
+PVPTab:AddDropdown({
+    Name = "Escolha um Jogador",
+    Default = "",
+    Options = playerList,
     Callback = function(Value)
-        IsHitboxActive = Value
+        playerDropdown = Value
     end
 })
 
-PVPTab:AddSlider({
-    Name = "Slider Hitbox",
-    Min = 5,
-    Max = 20,
-    Default = 20,
-    Color = Color3.fromRGB(255, 255, 255),
-    Increment = 1,
-    ValueName = "Tamanho",
-    Callback = function(Value)
-        HeadSize = Value
+-- Função para mostrar inventário
+local function showInventory(player)
+    local inv = player:FindFirstChild("Inv")
+    local backpack = player:FindFirstChild("Backpack")
+    
+    local items = {}
+    if inv then
+        for _, item in ipairs(inv:GetChildren()) do
+            table.insert(items, item.Name)
+        end
+    end
+    
+    if backpack then
+        for _, item in ipairs(backpack:GetChildren()) do
+            table.insert(items, item.Name)
+        end
+    end
+    
+    if #items > 0 then
+        local itemList = table.concat(items, ", ")
+        OrionLib:MakeNotification({
+            Name = "Inventário de " .. player.Name,
+            Content = "Itens: " .. itemList,
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+    else
+        OrionLib:MakeNotification({
+            Name = "Inventário de " .. player.Name,
+            Content = "Nenhum item encontrado no inventário ou mochila.",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+    end
+end
+
+-- Botão para mostrar o inventário
+PVPTab:AddButton({
+    Name = "Mostrar Inventário do Jogador",
+    Callback = function()
+        if playerDropdown and playerDropdown ~= "" then
+            local player = players:FindFirstChild(playerDropdown)
+            if player then
+                showInventory(player)
+            end
+        end
+    end
+})
+
+-- Botão para mostrar Backpack
+PVPTab:AddButton({
+    Name = "Mostrar Backpack do Jogador",
+    Callback = function()
+        if playerDropdown and playerDropdown ~= "" then
+            local player = players:FindFirstChild(playerDropdown)
+            if player then
+                showInventory(player)  -- Usa a mesma função para mostrar inventário
+            end
+        end
     end
 })
 
@@ -248,25 +280,108 @@ local TeleportTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local teleports = {
-    {"Teleport Praça", CFrame.new(-291.579559, 3.26299787, 342.192535)},
-    {"Teleport Gás", CFrame.new(-469.959015, 3.25349784, -54.3936005)},
-    {"Teleport HP", CFrame.new(-543.439941, 3.26299858, 645.16864)},
-    {"Teleport Gari", CFrame.new(-518.672852, 3.16749811, -1.16962147)},
-    {"Teleport PM", CFrame.new(-980.181458, 2.27553082, 467.080536)},
-    {"Teleport PRF", CFrame.new(-2165.34546, 3.01715183, -737.137878)},
-    {"Teleport Mineração", CFrame.new(201.932144, 2.76136589, 145.50531)},
-    {"Teleport Mecânica", CFrame.new(-180.608261, 3.29813337, -532.4151)},
-    {"Teleport Fazenda", CFrame.new(817.243225, 3.26249814, -87.316864)}
-}
+TeleportTab:AddButton({
+    Name = "Teleport Praça",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-291.579559, 3.26299787, 342.192535))
+    end
+})
 
-for _, tp in ipairs(teleports) do
-    TeleportTab:AddButton({
-        Name = tp[1],
-        Callback = function()
-            players.LocalPlayer.Character:SetPrimaryPartCFrame(tp[2])
+TeleportTab:AddButton({
+    Name = "Teleport Gás",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-469.959015, 3.25349784, -54.3936005, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport HP",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-543.439941, 3.26299858, 645.16864, 0, 0, 1, 0, 1, -0, -1, 0, 0))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Gari",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-518.672852, 3.16749811, -1.16962147, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport PM",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-980.181458, 2.27553082, 467.080536, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport PRF",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-2165.34546, 3.01715183, -737.137878, -1, 0, 0, 0, 1, 0, 0, 0, -1))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Mineração",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(201.932144, 2.76136589, 145.50531, 0, 0, 1, 0, 1, -0, -1, 0, 0))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Mecânica",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-180.608261, 3.29813337, -532.4151, 0.422592998, -0, -0.906319618, 0, 1, -0, 0.906319618, 0, 0.422592998))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Fazenda",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(817.243225, 3.26249814, -87.316864, 0, 0, 1, 0, 1, 0, -1, 0, 0))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Ilegal",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(1129.86682, 18.493576, -2082.05591, -1, 0, 0, 0, 1, 0, 0, 0, -1))
+    end
+})
+
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+MiscTab:AddToggle({
+    Name = "auto drogas",
+    Default = false,
+    Callback = function(Value)
+        isFarmActive = Value
+        if isFarmActive then
+            spawn(loopFarm)
+            print("Farm ativado")
+        else
+            print("Farm desativado")
         end
-    })
-end
+    end
+})
+
+MiscTab:AddToggle({
+    Name = "Verificar STAFF",
+    Default = false,
+    Callback = function(Value)
+        isCheckActive = Value
+        if isCheckActive then
+            spawn(startChecking)
+            print("Verificação de STAFF ativada")
+        else
+            print("Verificação de STAFF desativada")
+        end
+    end
+})
 
 OrionLib:Init()
