@@ -11,6 +11,7 @@ local outlineTransparency = 0 -- Transparência do contorno (0 = totalmente vis�
 local HeadSize = 20 -- Tamanho inicial da Hitbox
 local IsHitboxActive = false -- Estado de ativação da Hitbox
 local IsTeamCheckEnabled = false
+local isFarmActive = false  -- Estado do farm
 print("script by shakaSilentAim")
 
 -- Função para criar ESP Name (NameTag)
@@ -122,6 +123,73 @@ local function toggleHitbox()
     end)
 end
 
+-- Função para farm (teleportar e pressionar tecla 'E')
+local function teleportarJogadorAleatoriamente()
+    local stems = {}
+    for _, plantaIlegal in pairs(game.Workspace:GetDescendants()) do
+        if plantaIlegal.Name == "PlantaIlegal" then
+            local stem = plantaIlegal:FindFirstChild("Stem")
+            if stem then
+                table.insert(stems, stem)
+            end
+        end
+    end
+
+    if #stems > 0 then
+        local stemAleatorio = stems[math.random(1, #stems)]
+        if stemAleatorio and game.Players.LocalPlayer.Character then
+            local humanoide = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+            if humanoide then
+                game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(stemAleatorio.CFrame)
+            end
+        end
+    else
+        print("Nenhum 'Stem' encontrado.")
+    end
+end
+
+local function segurarTeclaE()
+    local interactionKey = "E"
+    local interactionDuration = 17
+    local virtualInputManager = game:GetService("VirtualInputManager")
+
+    for _ = 1, interactionDuration do
+        virtualInputManager:SendKeyEvent(true, interactionKey, false, game)
+        wait(1)
+    end
+
+    virtualInputManager:SendKeyEvent(false, interactionKey, false, game)
+end
+
+local function loopFarm()
+    while isFarmActive do
+        teleportarJogadorAleatoriamente()
+        segurarTeclaE()
+        wait(1)
+    end
+end
+
+-- Função para iniciar ou parar o farm
+local FarmTab = Window:MakeTab({
+    Name = "Farm",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+FarmTab:AddToggle({
+    Name = "farm drogas",
+    Default = false,
+    Callback = function(Value)
+        isFarmActive = Value
+        if isFarmActive then
+            spawn(loopFarm)
+            print("Farm ativado")
+        else
+            print("Farm desativado")
+        end
+    end
+})
+
 -- Função para adicionar as opções de Toggle ESP Name, Highlight e Hitbox na GUI
 local PVPTab = Window:MakeTab({
     Name = "PVP",
@@ -131,13 +199,12 @@ local PVPTab = Window:MakeTab({
 
 PVPTab:AddToggle({
     Name = "ESP Name",
-    Default = false, -- Estado inicial desativado
+    Default = false,
     Callback = function(Value)
         if Value then
-            spawn(monitorESP) -- Inicia o monitoramento do ESP Name
+            spawn(monitorESP)
             print("ESP Name ativado")
         else
-            -- Remove o ESP Name de todos os jogadores
             for _, player in ipairs(players:GetPlayers()) do
                 local character = player.Character or player.CharacterAdded:Wait()
                 local espName = character:FindFirstChild("ESPName")
@@ -152,13 +219,12 @@ PVPTab:AddToggle({
 
 PVPTab:AddToggle({
     Name = "Highlight",
-    Default = false, -- Estado inicial desativado
+    Default = false,
     Callback = function(Value)
         if Value then
-            spawn(highlightAllPlayers) -- Inicia o monitoramento do Highlight
+            spawn(highlightAllPlayers)
             print("Highlight ativado")
         else
-            -- Remove o Highlight de todos os jogadores
             for _, player in ipairs(players:GetPlayers()) do
                 local character = player.Character or player.CharacterAdded:Wait()
                 local highlight = character:FindFirstChildOfClass("Highlight")
@@ -173,11 +239,11 @@ PVPTab:AddToggle({
 
 PVPTab:AddToggle({
     Name = "Hitbox",
-    Default = false, -- Estado inicial desativado
+    Default = false,
     Callback = function(Value)
-        IsHitboxActive = Value -- Ativa ou desativa a hitbox
+        IsHitboxActive = Value
         if IsHitboxActive then
-            toggleHitbox() -- Ativa a expansão da hitbox
+            toggleHitbox()
             print("Hitbox ativada")
         else
             print("Hitbox desativada")
@@ -185,9 +251,8 @@ PVPTab:AddToggle({
     end
 })
 
--- Slider para ajustar o tamanho da hitbox (não ativa a hitbox, apenas ajusta o tamanho)
 PVPTab:AddSlider({
-    Name = "Tamanho da Hitbox",
+    Name = "tamanho da Hitbox",
     Min = 10,
     Max = 50,
     Default = 20,
@@ -200,9 +265,8 @@ PVPTab:AddSlider({
     end
 })
 
--- Slider para ajustar o tamanho do nome no ESP
 PVPTab:AddSlider({
-    Name = "Tamanho do ESP Name",
+    Name = "tamanho do ESP Name",
     Min = 15,
     Max = 34,
     Default = 27,
@@ -211,7 +275,6 @@ PVPTab:AddSlider({
     ValueName = "Tamanho",
     Callback = function(Value)
         nameSize = Value
-        -- Atualiza o tamanho de todos os ESP Names existentes
         for _, player in ipairs(players:GetPlayers()) do
             local character = player.Character or player.CharacterAdded:Wait()
             local espName = character:FindFirstChild("ESPName")
@@ -226,5 +289,4 @@ PVPTab:AddSlider({
     end
 })
 
--- Inicializa a biblioteca OrionLib
 OrionLib:Init()
