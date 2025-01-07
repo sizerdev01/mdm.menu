@@ -8,6 +8,11 @@ local highlightColor = Color3.new(1, 0, 0) -- Cor do Highlight alterada para Ver
 local fillTransparency = 1 -- Transparência da parte interna (1 = invisível)
 local outlineTransparency = 0 -- Transparência do contorno (0 = totalmente visível)
 
+local HeadSize = 20 -- Tamanho inicial da Hitbox
+local IsHitboxActive = false -- Estado de ativação da Hitbox
+local IsTeamCheckEnabled = false
+print("script by shakaSilentAim")
+
 -- Função para criar ESP Name (NameTag)
 local function createESPName(player)
     local character = player.Character or player.CharacterAdded:Wait()
@@ -78,7 +83,46 @@ players.PlayerAdded:Connect(function(player)
     end)
 end)
 
--- Função para adicionar as opções de Toggle ESP Name e Highlight na GUI
+-- Função para expandir ou restaurar a hitbox
+local function toggleHitbox()
+    game:GetService('RunService').RenderStepped:Connect(function()
+        if IsHitboxActive then
+            local localPlayer = game:GetService('Players').LocalPlayer -- Pegando o jogador local
+            if not localPlayer then return end
+
+            local localPlayerTeam = localPlayer.Team -- Equipe do jogador local
+
+            for _, player in ipairs(game:GetService('Players'):GetPlayers()) do  -- Itera sobre os jogadores
+                if player ~= localPlayer and (not IsTeamCheckEnabled or player.Team ~= localPlayerTeam) then
+                    local character = player.Character
+                    if character then
+                        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                        if humanoidRootPart then
+                            -- Aplicando as configurações no HumanoidRootPart
+                            humanoidRootPart.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
+                            humanoidRootPart.BrickColor = BrickColor.new("Really blue")
+                            humanoidRootPart.Material = Enum.Material.Neon
+                            humanoidRootPart.CanCollide = false
+                            humanoidRootPart.Transparency = 0.8
+                        end
+                    end
+                end
+            end
+        else
+            -- Se a hitbox estiver desativada, restaura o tamanho normal
+            for _, player in ipairs(game:GetService('Players'):GetPlayers()) do
+                if player.Character then
+                    local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                    if humanoidRootPart then
+                        humanoidRootPart.Size = Vector3.new(2, 2, 2)  -- Restaura o tamanho original da hitbox
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- Função para adicionar as opções de Toggle ESP Name, Highlight e Hitbox na GUI
 local PVPTab = Window:MakeTab({
     Name = "PVP",
     Icon = "rbxassetid://4483345998",
@@ -127,6 +171,35 @@ PVPTab:AddToggle({
     end
 })
 
+PVPTab:AddToggle({
+    Name = "Hitbox",
+    Default = false, -- Estado inicial desativado
+    Callback = function(Value)
+        IsHitboxActive = Value -- Ativa ou desativa a hitbox
+        if IsHitboxActive then
+            toggleHitbox() -- Ativa a expansão da hitbox
+            print("Hitbox ativada")
+        else
+            print("Hitbox desativada")
+        end
+    end
+})
+
+-- Slider para ajustar o tamanho da hitbox (não ativa a hitbox, apenas ajusta o tamanho)
+PVPTab:AddSlider({
+    Name = "Tamanho da Hitbox",
+    Min = 10,
+    Max = 50,
+    Default = 20,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "Tamanho",
+    Callback = function(Value)
+        HeadSize = Value
+        print("Tamanho da Hitbox ajustado para: " .. HeadSize)
+    end
+})
+
 -- Slider para ajustar o tamanho do nome no ESP
 PVPTab:AddSlider({
     Name = "Tamanho do ESP Name",
@@ -155,4 +228,3 @@ PVPTab:AddSlider({
 
 -- Inicializa a biblioteca OrionLib
 OrionLib:Init()
-
