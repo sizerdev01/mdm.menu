@@ -1,23 +1,4 @@
-------------------------------------------------------------- SYSTEM SHIELD
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-local authorizedUserIds = {
-    876551458,   -- LOCKING ALT
-    7714512668, -- LOCKING ALT
-}
-local function isAuthorized(userId)
-    for _, id in ipairs(authorizedUserIds) do
-        if id == userId then
-            return true
-        end
-    end
-    return false
-end
-if not isAuthorized(localPlayer.UserId) then
-    localPlayer:Kick("Você não tem permissão para usar este script.")
-    return 
-end
-------------------------------------------------------------- SYSTEM SHIELD
+
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
 
