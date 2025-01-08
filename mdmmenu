@@ -1,7 +1,6 @@
-
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
-
+IntroText = "O SHAKA EH MUITO FODA MERMO"
 local players = game:GetService("Players")
 local nameSize = 27 -- Tamanho padrão do ESP Name
 local highlightColor = Color3.new(1, 0, 0) -- Cor do Highlight alterada para Vermelho
@@ -9,6 +8,7 @@ local fillTransparency = 1 -- Transparência da parte interna (1 = invisível)
 local outlineTransparency = 0 -- Transparência do contorno (0 = totalmente visível)
 local isFarmActive = false  -- Estado do farm
 local camera = game:GetService("Workspace").CurrentCamera
+local isTPClickActive = false  -- Inicializa o estado do TPClick como desativado
 
 --staff
 local Players = game:GetService("Players")
@@ -261,6 +261,41 @@ local TeleportTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+--------------------- T P C L I C K --------------------
+---
+TeleportTab:AddToggle({
+    Name = "TP Click",
+    Default = false,
+    Callback = function(value)
+        isTPClickActive = value  -- Atualiza o estado do toggle
+    end
+})
+
+local UIS = game:GetService("UserInputService")
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
+
+-- Função que obtém o personagem do jogador
+function GetCharacter()
+   return game.Players.LocalPlayer.Character
+end
+
+-- Função que executa o teleport
+function Teleport(pos)
+   local Char = GetCharacter()
+   if Char then
+       Char:MoveTo(pos)
+   end
+end
+
+-- Monitora quando o botão esquerdo do mouse é pressionado
+UIS.InputBegan:Connect(function(input)
+   if isTPClickActive and input.UserInputType == Enum.UserInputType.MouseButton2 then
+       Teleport(Mouse.Hit.p)  -- Teleporta o jogador para a posição do clique
+   end
+end)
+
+--------------------------------------------------
 local function teleportToPlayer(player)
     local localPlayer = Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
