@@ -2,17 +2,14 @@ local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shl
 local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
 
 local players = game:GetService("Players")
-
 local nameSize = 27 -- Tamanho padrão do ESP Name
 local highlightColor = Color3.new(1, 0, 0) -- Cor do Highlight alterada para Vermelho
 local fillTransparency = 1 -- Transparência da parte interna (1 = invisível)
 local outlineTransparency = 0 -- Transparência do contorno (0 = totalmente visível)
-
 local isFarmActive = false  -- Estado do farm
-
 local camera = game:GetService("Workspace").CurrentCamera
 
--- staff
+--staff
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local teamName = "STAFF"  -- Nome do time a ser verificado
@@ -196,89 +193,128 @@ PVPTab:AddToggle({
     end
 })
 
--- Adicionando Dropdown para jogadores
-local playerList = {}
-for _, player in ipairs(players:GetPlayers()) do
-    table.insert(playerList, player.Name)
-end
-
-local playerDropdown = ""
-PVPTab:AddDropdown({
-    Name = "Escolha um Jogador",
-    Default = "",
-    Options = playerList,
-    Callback = function(Value)
-        playerDropdown = Value
-    end
-})
-
--- Função para mostrar inventário
-local function showInventory(player)
-    local inv = player:FindFirstChild("Inv")
-    local backpack = player:FindFirstChild("Backpack")
-    
-    local items = {}
-    if inv then
-        for _, item in ipairs(inv:GetChildren()) do
-            table.insert(items, item.Name)
-        end
-    end
-    
-    if backpack then
-        for _, item in ipairs(backpack:GetChildren()) do
-            table.insert(items, item.Name)
-        end
-    end
-    
-    if #items > 0 then
-        local itemList = table.concat(items, ", ")
-        OrionLib:MakeNotification({
-            Name = "Inventário de " .. player.Name,
-            Content = "Itens: " .. itemList,
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-    else
-        OrionLib:MakeNotification({
-            Name = "Inventário de " .. player.Name,
-            Content = "Nenhum item encontrado no inventário ou mochila.",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-    end
-end
-
--- Botão para mostrar o inventário
-PVPTab:AddButton({
-    Name = "Mostrar Inventário do Jogador",
-    Callback = function()
-        if playerDropdown and playerDropdown ~= "" then
-            local player = players:FindFirstChild(playerDropdown)
-            if player then
-                showInventory(player)
+-- Adicionando o Dropdown para visualizar os itens do Backpack
+local PlayerDropdown = PVPTab:AddDropdown({
+    Name = "View Item Equip",
+    List = {},
+    Default = nil,
+    Callback = function(SelectedPlayer)
+        print("Player Selected: " .. SelectedPlayer)
+        
+        -- Obtém o jogador selecionado
+        local player = game.Players:FindFirstChild(SelectedPlayer)
+        
+        if player then
+            -- Exibe os itens no Backpack do jogador
+            local backpackItems = {}
+            for _, item in pairs(player.Backpack:GetChildren()) do
+                table.insert(backpackItems, item.Name)
+            end
+            local itemsText = table.concat(backpackItems, ", ")
+            
+            -- Exibe uma notificação com os itens do Backpack
+            if #backpackItems > 0 then
+                OrionLib:MakeNotification({
+                    Name = player.Name .. "'s Itens Equipados",
+                    Content = "Items: " .. itemsText,
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
+            else
+                OrionLib:MakeNotification({
+                    Name = player.Name .. "'s Itens Equipados",
+                    Content = "Sem itens equipados",
+                    Image = "rbxassetid://4483345998",
+                    Time = 5
+                })
             end
         end
     end
 })
 
--- Botão para mostrar Backpack
-PVPTab:AddButton({
-    Name = "Mostrar Backpack do Jogador",
-    Callback = function()
-        if playerDropdown and playerDropdown ~= "" then
-            local player = players:FindFirstChild(playerDropdown)
-            if player then
-                showInventory(player)  -- Usa a mesma função para mostrar inventário
-            end
-        end
+-- Função para atualizar o Dropdown com os jogadores online
+local function updatePlayerDropdown()
+    local playerList = {}
+    for _, player in pairs(game.Players:GetPlayers()) do
+        table.insert(playerList, player.Name)
     end
-})
+    PlayerDropdown:Refresh(playerList, true)  -- Atualiza o dropdown mantendo a seleção atual
+end
+
+-- Atualiza o Dropdown de jogadores inicialmente
+updatePlayerDropdown()
+
+-- Atualiza o Dropdown sempre que um novo jogador entrar
+game.Players.PlayerAdded:Connect(function(player)
+    updatePlayerDropdown()
+end)
+
+-- Atualiza o Dropdown quando um jogador sair
+game.Players.PlayerRemoving:Connect(function(player)
+    updatePlayerDropdown()
+end)
 
 local TeleportTab = Window:MakeTab({
     Name = "Teleports",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
+
+local function teleportToPlayer(player)
+    local localPlayer = Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    if character then
+        localPlayer.Character:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame)
+        OrionLib:MakeNotification({
+            Name = "Teleportado",
+            Content = "Você foi teleportado para " .. player.Name,
+            Time = 5
+        })
+    else
+        OrionLib:MakeNotification({
+            Name = "Erro",
+            Content = "Não foi possível teletransportar.",
+            Time = 5
+        })
+    end
+end
+
+local teleportDropdown
+
+local function updateTeleportPlayerList()
+    local playerNames = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        -- Adiciona os nomes dos jogadores, exceto o jogador local
+        if player ~= Players.LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+
+    if teleportDropdown then
+        teleportDropdown:UpdateOptions(playerNames)  -- Atualiza as opções do dropdown
+    else
+       
+        teleportDropdown = TeleportTab:AddDropdown({
+            Name = "Selecione um jogador para teleportar",
+            Default = "",  -- Deixe o valor padrão vazio para evitar teleporte imediato
+            Options = playerNames,
+            Callback = function(selectedPlayerName)
+                if selectedPlayerName ~= "" then
+                    local player = Players:FindFirstChild(selectedPlayerName)
+                    if player then
+                        teleportToPlayer(player)
+                    end
+                end
+            end
+        })
+    end
+end
+
+updateTeleportPlayerList()
+
+Players.PlayerAdded:Connect(updateTeleportPlayerList)
+Players.PlayerRemoving:Connect(updateTeleportPlayerList)
 
 TeleportTab:AddButton({
     Name = "Teleport Praça",
@@ -302,11 +338,41 @@ TeleportTab:AddButton({
 })
 
 TeleportTab:AddButton({
+    Name = "Teleport Tabacaria",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-83.1141129, 13.1430578, 74.7073364, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Garagem",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-466.870148, 7.64567232, 350.242737, 0, 0, 1, 0, 1, -0, -1, 0, 0))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Concessionaria",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-91.3902893, 8.07136822, 520.355347, 0, 0, 1, 0, 1, -0, -1, 0, 0))
+    end
+})
+
+
+TeleportTab:AddButton({
     Name = "Teleport Gari",
     Callback = function()
         players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-518.672852, 3.16749811, -1.16962147, 0, 0, -1, 0, 1, 0, 1, 0, 0))
     end
 })
+
+TeleportTab:AddButton({
+    Name = "Teleport Imobiliaria",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-284.904785, 8.26088619, -72.2896194, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+    end
+})
+
 
 TeleportTab:AddButton({
     Name = "Teleport PM",
@@ -321,6 +387,7 @@ TeleportTab:AddButton({
         players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-2165.34546, 3.01715183, -737.137878, -1, 0, 0, 0, 1, 0, 0, 0, -1))
     end
 })
+
 
 TeleportTab:AddButton({
     Name = "Teleport Mineração",
@@ -344,9 +411,37 @@ TeleportTab:AddButton({
 })
 
 TeleportTab:AddButton({
+    Name = "Teleport Prefeitura",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-284.388458, 15.1148872, 88.0397873, 0, 0, -1, 0, 1, 0, 1, 0, 0))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Banco",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-27.2709007, 11.5685892, 418.200653, 1, 0, 0, 0, 1, 0, 0, 0, 1))
+    end
+})
+
+TeleportTab:AddButton({
     Name = "Teleport Ilegal",
     Callback = function()
         players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(1129.86682, 18.493576, -2082.05591, -1, 0, 0, 0, 1, 0, 0, 0, -1))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport predio 1",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-1595.23328, 204.074341, 555.895386, 0.939687431, -0.34203434, 1.81794167e-06, 1.81794167e-06, 1.02519989e-05, 1, -0.34203434, -0.93968749, 1.02519989e-05))
+    end
+})
+
+TeleportTab:AddButton({
+    Name = "Teleport Devs Mini City",
+    Callback = function()
+        players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(2555.44263, 303.167755, -1004.13763, -0.422592998, 0, 0.906319618, 0, 1, 0, -0.906319618, 0, -0.422592998))
     end
 })
 
