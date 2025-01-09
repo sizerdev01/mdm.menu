@@ -1,0 +1,86 @@
+getgenv().ViewPlayerDropdown = nil -- Variável global para o dropdown
+
+local Players = game:GetService("Players")
+local camera = game:GetService("Workspace").CurrentCamera
+
+local function viewPlayer(player)
+    local character = player.Character or player.CharacterAdded:Wait()
+    if character and character:FindFirstChild("Head") then
+        camera.CameraSubject = character
+        print("Você está agora vendo " .. player.Name)
+    else
+        print("Erro: Não foi possível visualizar o jogador.")
+    end
+end
+
+local function unviewPlayer()
+    camera.CameraSubject = Players.LocalPlayer.Character -- Volta para o próprio jogador
+    print("Visão desativada: Você parou de ver o jogador.")
+end
+
+-- Função para criar o Dropdown e armazená-lo globalmente
+getgenv().CreateDropdown = function()
+    local playerNames = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+
+    getgenv().ViewPlayerDropdown = {
+        Options = playerNames,
+        Refresh = function(self, newOptions, clear)
+            if clear then
+                self.Options = {}
+            end
+            for _, option in ipairs(newOptions) do
+                table.insert(self.Options, option)
+            end
+            print("Dropdown atualizado: ", table.concat(self.Options, ", "))
+        end,
+        Callback = function(selectedPlayerName)
+            if selectedPlayerName and selectedPlayerName ~= "" then
+                local player = Players:FindFirstChild(selectedPlayerName)
+                if player then
+                    viewPlayer(player)
+                end
+            end
+        end
+    }
+
+    -- Simula a escolha de um jogador (exemplo)
+    print("Dropdown criado com opções: ", table.concat(playerNames, ", "))
+end
+
+-- Atualiza automaticamente quando um jogador entra ou sai
+Players.PlayerAdded:Connect(function()
+    if getgenv().ViewPlayerDropdown then
+        local playerNames = {}
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                table.insert(playerNames, player.Name)
+            end
+        end
+        getgenv().ViewPlayerDropdown:Refresh(playerNames, true)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function()
+    if getgenv().ViewPlayerDropdown then
+        local playerNames = {}
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                table.insert(playerNames, player.Name)
+            end
+        end
+        getgenv().ViewPlayerDropdown:Refresh(playerNames, true)
+    end
+end)
+
+-- Exemplo de botão para desativar a visão
+getgenv().UnviewPlayer = function()
+    unviewPlayer()
+end
+
+-- Executa o dropdown ao carregar
+getgenv().CreateDropdown()
