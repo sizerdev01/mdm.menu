@@ -12,6 +12,7 @@ getgenv().AimbotSettings = getgenv().AimbotSettings or {
     Smoothness = 0.2, -- Suavidade da mira (0 = instantâneo, 1 = muito lento)
     TargetPart = "Head", -- Parte do corpo para mirar
     Enabled = true, -- Ativar/Desativar o aimbot
+    Visible = true, -- Mostrar/Esconder o círculo FOV
 }
 
 --// Criar círculo FOV
@@ -19,13 +20,14 @@ local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
 FOVCircle.Radius = getgenv().AimbotSettings.FOV
 FOVCircle.Color = Color3.new(1, 1, 1) -- Branco
-FOVCircle.Visible = true
+FOVCircle.Visible = getgenv().AimbotSettings.Visible
 FOVCircle.Transparency = 1
 FOVCircle.Filled = false
 
---// Função para atualizar a posição e o tamanho do FOV
+--// Função para atualizar a posição, tamanho e visibilidade do FOV
 local function UpdateFOV()
     FOVCircle.Radius = getgenv().AimbotSettings.FOV -- Atualizar tamanho do FOV dinamicamente
+    FOVCircle.Visible = getgenv().AimbotSettings.Visible -- Atualizar visibilidade do FOV dinamicamente
     local CursorPosition = UserInputService:GetMouseLocation()
     FOVCircle.Position = CursorPosition
 end
