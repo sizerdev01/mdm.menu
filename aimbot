@@ -25,7 +25,7 @@ FOVCircle.Filled = false
 
 --// Função para atualizar a posição e o tamanho do FOV
 local function UpdateFOV()
-    FOVCircle.Radius = getgenv().AimbotSettings.FOV -- Atualizar tamanho do FOV
+    FOVCircle.Radius = getgenv().AimbotSettings.FOV -- Atualizar tamanho do FOV dinamicamente
     local CursorPosition = UserInputService:GetMouseLocation()
     FOVCircle.Position = CursorPosition
 end
