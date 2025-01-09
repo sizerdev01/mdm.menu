@@ -1,6 +1,15 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "by ?????", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
+local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
+---loadstringuess
+loadstring(game:HttpGet("https://raw.githubusercontent.com/sizerdev01/mdm.menu/refs/heads/main/aimbot"))()
+--// aimbot sett
+getgenv().AimbotSettings.Smoothness = 0.1
+getgenv().AimbotSettings.TargetPart = "Head"
+getgenv().AimbotSettings.Enabled = false
+getgenv().AimbotSettings.FOV = 40 -- não tocar
+getgenv().AimbotSettings.Visible = false
 
+---
 local players = game:GetService("Players")
 local nameSize = 27 -- Tamanho padrão do ESP Name
 local highlightColor = Color3.new(1, 0, 0) -- Cor do Highlight alterada para Vermelho
@@ -150,50 +159,67 @@ local PVPTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local isESPNameActive = false
-PVPTab:AddToggle({
-    Name = "ESP Name",
-    Default = false,
+local Aim = PVPTab:AddSection({
+    Name = "Aimbot Config"
+})
+-----------------
+Aim:AddToggle({
+    Name = "Aimbot",
+    Default = getgenv().AimbotSettings.Enabled,
     Callback = function(Value)
-        isESPNameActive = Value
-        if isESPNameActive then
-            monitorAllPlayersESPName()
-            print("ESP Name ativado ")
-        else
-            for _, player in ipairs(players:GetPlayers()) do
-                local character = player.Character
-                local espName = character and character:FindFirstChild("ESPName")
-                if espName then
-                    espName:Destroy()
-                end
-            end
-            print("ESP Name desativado")
-        end
+        getgenv().AimbotSettings.Enabled = Value
     end
 })
 
-local isHighlightActive = false
-PVPTab:AddToggle({
-    Name = "ESP",
-    Default = false,
+Aim:AddToggle({
+    Name = "Mostrar FOV",
+    Default = getgenv().AimbotSettings.Visible,
     Callback = function(Value)
-        isHighlightActive = Value
-        if isHighlightActive then
-            monitorAllPlayersESP()
-            print("ESP ativado")
-        else
-            for _, player in ipairs(players:GetPlayers()) do
-                local character = player.Character
-                local highlight = character and character:FindFirstChildOfClass("Highlight")
-                if highlight then
-                    highlight:Destroy()
-                end
-            end
-            print("ESP desativado")
-        end
+        getgenv().AimbotSettings.Visible = Value
     end
 })
 
+Aim:AddDropdown({
+    Name = "Parte do Corpo",
+    Default = "Head",
+    Options = {"Head", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"},
+    Callback = function(Value)
+        getgenv().AimbotSettings.TargetPart = Value
+    end
+})
+
+--// Adicionar slider para ajustar o tamanho do FOV
+Aim:AddSlider({
+    Name = "Tamanho do FOV",
+    Min = 20,
+    Max = 200,
+    Default = getgenv().AimbotSettings.FOV,
+    Color = Color3.new(1, 1, 1),
+    Increment = 1,
+    ValueName = "FOV",
+    Callback = function(Value)
+        getgenv().AimbotSettings.FOV = Value
+    end
+})
+
+--// Adicionar slider para ajustar o valor de Smoothness
+Aim:AddSlider({
+    Name = "Suavidade (Smoothness)",
+    Min = 0,
+    Max = 1,
+    Default = getgenv().AimbotSettings.Smoothness,
+    Color = Color3.new(1, 1, 1),
+    Increment = 0.01,
+    ValueName = "Smoothness",
+    Callback = function(Value)
+        getgenv().AimbotSettings.Smoothness = Value
+    end
+})
+
+local vis = PVPTab:AddSection({
+    Name = "Visual"
+})
+ 
 local TeleportTab = Window:MakeTab({
     Name = "Teleports",
     Icon = "rbxassetid://4483345998",
@@ -238,8 +264,76 @@ players.PlayerRemoving:Connect(function()
     updateTeleportDropdown()
 end)
 
-PlayerDropdown = PVPTab:AddDropdown({
-    Name = "View Item Equip",
+local function viewPlayer(player)
+    local character = player.Character or player.CharacterAdded:Wait()
+    if character and character:FindFirstChild("Head") then
+        camera.CameraSubject = character
+        OrionLib:MakeNotification({
+            Name = "Visão ativada",
+            Content = "Você está agora vendo " .. player.Name,
+            Time = 5
+        })
+    else
+        OrionLib:MakeNotification({
+            Name = "Erro",
+            Content = "Não foi possível visualizar o jogador.",
+            Time = 5
+        })
+    end
+end
+
+local function unviewPlayer()
+    camera.CameraSubject = Players.LocalPlayer.Character -- Volta para o próprio jogador
+    OrionLib:MakeNotification({
+        Name = "Visão desativada",
+        Content = "Você parou de ver o jogador.",
+        Time = 5
+    })
+end
+
+local viewDropdown
+
+local function updateViewPlayerList()
+    local playerNames = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
+    end
+
+    if viewDropdown then
+        viewDropdown:Refresh(playerNames, true)  -- Atualiza as opções do dropdown com refresh
+    else
+        viewDropdown = vis:AddDropdown({
+            Name = "View player",
+            Default = "",  -- Valor padrão vazio
+            Options = playerNames,
+            Callback = function(selectedPlayerName)
+                if selectedPlayerName ~= "" then
+                    local player = Players:FindFirstChild(selectedPlayerName)
+                    if player then
+                        viewPlayer(player)
+                    end
+                end
+            end
+        })
+    end
+end
+
+updateViewPlayerList()
+
+Players.PlayerAdded:Connect(updateViewPlayerList)
+Players.PlayerRemoving:Connect(updateViewPlayerList)
+
+vis:AddButton({
+    Name = "Unview",
+    Callback = function()
+        unviewPlayer()
+    end
+})
+---------------------- VIEW ACIMA --------------------
+PlayerDropdown = vis:AddDropdown({
+    Name = "View equipped items",
     List = {},
     Default = nil,
     Callback = function(SelectedPlayer)
@@ -261,8 +355,52 @@ PlayerDropdown = PVPTab:AddDropdown({
     end
 })
 
+local isESPNameActive = false
+vis:AddToggle({
+    Name = "ESP Name",
+    Default = false,
+    Callback = function(Value)
+        isESPNameActive = Value
+        if isESPNameActive then
+            monitorAllPlayersESPName()
+            print("ESP Name ativado ")
+        else
+            for _, player in ipairs(players:GetPlayers()) do
+                local character = player.Character
+                local espName = character and character:FindFirstChild("ESPName")
+                if espName then
+                    espName:Destroy()
+                end
+            end
+            print("ESP Name desativado")
+        end
+    end
+})
+
+local isHighlightActive = false
+vis:AddToggle({
+    Name = "ESP",
+    Default = false,
+    Callback = function(Value)
+        isHighlightActive = Value
+        if isHighlightActive then
+            monitorAllPlayersESP()
+            print("ESP ativado")
+        else
+            for _, player in ipairs(players:GetPlayers()) do
+                local character = player.Character
+                local highlight = character and character:FindFirstChildOfClass("Highlight")
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+            print("ESP desativado")
+        end
+    end
+})
+
 teleportDropdown = TeleportTab:AddDropdown({
-    Name = "Selecione um jogador para teleportar",
+    Name = "Teleport Player",
     List = {},
     Default = nil,
     Callback = function(SelectedPlayer)
