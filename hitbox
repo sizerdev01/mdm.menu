@@ -1,27 +1,34 @@
--- Configurações globais com getgenv
-getgenv().HeadSize = 20  -- Tamanho da cabeça
-getgenv().Transparency = 0.7  -- Transparência da hitbox
-getgenv().BrickColor = BrickColor.new("Really blue")  -- Cor da hitbox
+getgenv().HitSettings = getgenv().HitSettings or {
+    HeadSize = 20,
+    Transparency = 0.7,
+    BrickColor = BrickColor.new("Really blue")
+}
+
+local HeadSize = getgenv().HitSettings.HeadSize
+local Transparency = getgenv().HitSettings.Transparency
+local BrickColor = getgenv().HitSettings.BrickColor
+local IsDisabled = true
+local IsTeamCheckEnabled = false 
 
 print("script by rhiandosetekkj ne segredo discord.gg/atropa")
 
 game:GetService('RunService').RenderStepped:Connect(function()
-    if not getgenv().IsDisabled then return end  -- Verifica se o script está desativado
+    if IsDisabled then
+        local localPlayer = game:GetService('Players').LocalPlayer -- family function
+        if not localPlayer then return end
 
-    local localPlayer = game:GetService('Players').LocalPlayer -- family function
-    if not localPlayer then return end
+        local localPlayerTeam = localPlayer.Team
 
-    local localPlayerTeam = localPlayer.Team
-
-    for _, player in ipairs(game:GetService('Players'):GetPlayers()) do
-        if player ~= localPlayer and (not getgenv().IsTeamCheckEnabled or player.Team ~= localPlayerTeam) then
-            local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-             if humanoidRootPart then
-                humanoidRootPart.Size = Vector3.new(getgenv().HeadSize, getgenv().HeadSize, getgenv().HeadSize)
-                humanoidRootPart.BrickColor = getgenv().BrickColor  -- Usando a cor configurada com getgenv
-                humanoidRootPart.Material = Enum.Material.Neon
-                humanoidRootPart.CanCollide = false
-                humanoidRootPart.Transparency = getgenv().Transparency  -- Usando a transparência configurada
+        for _, player in ipairs(game:GetService('Players'):GetPlayers()) do  -- partes e color da hbox
+            if player ~= localPlayer and (not IsTeamCheckEnabled or player.Team ~= localPlayerTeam) then
+                local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if humanoidRootPart then
+                    humanoidRootPart.Size = Vector3.new(HeadSize, HeadSize, HeadSize)
+                    humanoidRootPart.BrickColor = BrickColor
+                    humanoidRootPart.Material = Enum.Material.Neon
+                    humanoidRootPart.CanCollide = false
+                    humanoidRootPart.Transparency = Transparency
+                end
             end
         end
     end
