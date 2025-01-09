@@ -26,10 +26,10 @@ FOVCircle.Filled = false
 
 --// Função para atualizar a posição, tamanho e visibilidade do FOV
 local function UpdateFOV()
-    FOVCircle.Radius = getgenv().AimbotSettings.FOV -- Atualizar tamanho do FOV dinamicamente
-    FOVCircle.Visible = getgenv().AimbotSettings.Visible -- Atualizar visibilidade do FOV dinamicamente
     local CursorPosition = UserInputService:GetMouseLocation()
     FOVCircle.Position = CursorPosition
+    FOVCircle.Radius = getgenv().AimbotSettings.FOV
+    FOVCircle.Visible = getgenv().AimbotSettings.Visible -- Atualizar visibilidade dinamicamente
 end
 
 --// Função para verificar se um jogador está dentro do FOV
