@@ -1,6 +1,6 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "??", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
-IntroText = "O SHAKA EH MUITO FODA MERMO"
+local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
+
 local players = game:GetService("Players")
 local nameSize = 27 -- Tamanho padrão do ESP Name
 local highlightColor = Color3.new(1, 0, 0) -- Cor do Highlight alterada para Vermelho
@@ -10,7 +10,7 @@ local isFarmActive = false  -- Estado do farm
 local camera = game:GetService("Workspace").CurrentCamera
 local isTPClickActive = false  -- Inicializa o estado do TPClick como desativado
 
---staff
+-- staff
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local teamName = "STAFF"  -- Nome do time a ser verificado
@@ -194,38 +194,92 @@ PVPTab:AddToggle({
     end
 })
 
--- Adicionando o Dropdown para visualizar os itens do Backpack
-local PlayerDropdown = PVPTab:AddDropdown({
+local TeleportTab = Window:MakeTab({
+    Name = "Teleports",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+------------------------------ DROPDOWNES
+local PlayerDropdown, teleportDropdown
+
+-- Função para atualizar o Dropdown de visualização de itens do backpack
+local function updatePlayerDropdown()
+    if PlayerDropdown then
+        local playerList = {}
+        for _, player in ipairs(players:GetPlayers()) do
+            table.insert(playerList, player.Name)
+        end
+        PlayerDropdown:Refresh(playerList, true) -- Atualiza o dropdown mantendo a seleção atual
+    end
+end
+
+-- Função para atualizar o Dropdown de teleporte
+local function updateTeleportDropdown()
+    if teleportDropdown then
+        local playerList = {}
+        for _, player in ipairs(players:GetPlayers()) do
+            if player ~= players.LocalPlayer then
+                table.insert(playerList, player.Name)
+            end
+        end
+        teleportDropdown:Refresh(playerList, true) -- Atualiza o dropdown mantendo a seleção atual
+    end
+end
+
+-- Atualiza os Dropdowns ao início e em eventos de entrada/saída de jogadores
+players.PlayerAdded:Connect(function()
+    updatePlayerDropdown()
+    updateTeleportDropdown()
+end)
+
+players.PlayerRemoving:Connect(function()
+    updatePlayerDropdown()
+    updateTeleportDropdown()
+end)
+
+PlayerDropdown = PVPTab:AddDropdown({
     Name = "View Item Equip",
     List = {},
     Default = nil,
     Callback = function(SelectedPlayer)
-        print("Player Selected: " .. SelectedPlayer)
-        
-        -- Obtém o jogador selecionado
-        local player = game.Players:FindFirstChild(SelectedPlayer)
-        
+        local player = players:FindFirstChild(SelectedPlayer)
         if player then
-            -- Exibe os itens no Backpack do jogador
             local backpackItems = {}
             for _, item in pairs(player.Backpack:GetChildren()) do
                 table.insert(backpackItems, item.Name)
             end
             local itemsText = table.concat(backpackItems, ", ")
-            
-            -- Exibe uma notificação com os itens do Backpack
-            if #backpackItems > 0 then
+            local notificationContent = #backpackItems > 0 and "Items: " .. itemsText or "Sem itens equipados"
+            OrionLib:MakeNotification({
+                Name = player.Name .. "'s Itens Equipados",
+                Content = notificationContent,
+                Image = "rbxassetid://4483345998",
+                Time = 5
+            })
+        end
+    end
+})
+
+teleportDropdown = TeleportTab:AddDropdown({
+    Name = "Selecione um jogador para teleportar",
+    List = {},
+    Default = nil,
+    Callback = function(SelectedPlayer)
+        local player = players:FindFirstChild(SelectedPlayer)
+        if player then
+            local localPlayer = players.LocalPlayer
+            if player.Character then
+                localPlayer.Character:SetPrimaryPartCFrame(player.Character.HumanoidRootPart.CFrame)
                 OrionLib:MakeNotification({
-                    Name = player.Name .. "'s Itens Equipados",
-                    Content = "Items: " .. itemsText,
-                    Image = "rbxassetid://4483345998",
+                    Name = "Teleportado",
+                    Content = "Você foi teleportado para " .. player.Name,
                     Time = 5
                 })
             else
                 OrionLib:MakeNotification({
-                    Name = player.Name .. "'s Itens Equipados",
-                    Content = "Sem itens equipados",
-                    Image = "rbxassetid://4483345998",
+                    Name = "Erro",
+                    Content = "Não foi possível teleportar.",
                     Time = 5
                 })
             end
@@ -233,36 +287,11 @@ local PlayerDropdown = PVPTab:AddDropdown({
     end
 })
 
--- Função para atualizar o Dropdown com os jogadores online
-local function updatePlayerDropdown()
-    local playerList = {}
-    for _, player in pairs(game.Players:GetPlayers()) do
-        table.insert(playerList, player.Name)
-    end
-    PlayerDropdown:Refresh(playerList, true)  -- Atualiza o dropdown mantendo a seleção atual
-end
-
--- Atualiza o Dropdown de jogadores inicialmente
+-- Inicialização
 updatePlayerDropdown()
+updateTeleportDropdown()
 
--- Atualiza o Dropdown sempre que um novo jogador entrar
-game.Players.PlayerAdded:Connect(function(player)
-    updatePlayerDropdown()
-end)
-
--- Atualiza o Dropdown quando um jogador sair
-game.Players.PlayerRemoving:Connect(function(player)
-    updatePlayerDropdown()
-end)
-
-local TeleportTab = Window:MakeTab({
-    Name = "Teleports",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
---------------------- T P C L I C K --------------------
----
+------------------------- TP CLICK ABAIXO  ----------------
 TeleportTab:AddToggle({
     Name = "TP Click",
     Default = false,
@@ -294,64 +323,7 @@ UIS.InputBegan:Connect(function(input)
        Teleport(Mouse.Hit.p)  -- Teleporta o jogador para a posição do clique
    end
 end)
-
---------------------------------------------------
-local function teleportToPlayer(player)
-    local localPlayer = Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-
-    if character then
-        localPlayer.Character:SetPrimaryPartCFrame(character.HumanoidRootPart.CFrame)
-        OrionLib:MakeNotification({
-            Name = "Teleportado",
-            Content = "Você foi teleportado para " .. player.Name,
-            Time = 5
-        })
-    else
-        OrionLib:MakeNotification({
-            Name = "Erro",
-            Content = "Não foi possível teletransportar.",
-            Time = 5
-        })
-    end
-end
-
-local teleportDropdown
-
-local function updateTeleportPlayerList()
-    local playerNames = {}
-    for _, player in ipairs(Players:GetPlayers()) do
-        -- Adiciona os nomes dos jogadores, exceto o jogador local
-        if player ~= Players.LocalPlayer then
-            table.insert(playerNames, player.Name)
-        end
-    end
-
-    if teleportDropdown then
-        teleportDropdown:UpdateOptions(playerNames)  -- Atualiza as opções do dropdown
-    else
-       
-        teleportDropdown = TeleportTab:AddDropdown({
-            Name = "Selecione um jogador para teleportar",
-            Default = "",  -- Deixe o valor padrão vazio para evitar teleporte imediato
-            Options = playerNames,
-            Callback = function(selectedPlayerName)
-                if selectedPlayerName ~= "" then
-                    local player = Players:FindFirstChild(selectedPlayerName)
-                    if player then
-                        teleportToPlayer(player)
-                    end
-                end
-            end
-        })
-    end
-end
-
-updateTeleportPlayerList()
-
-Players.PlayerAdded:Connect(updateTeleportPlayerList)
-Players.PlayerRemoving:Connect(updateTeleportPlayerList)
-
+---------------------------------------------------------------
 TeleportTab:AddButton({
     Name = "Teleport Praça",
     Callback = function()
@@ -394,7 +366,6 @@ TeleportTab:AddButton({
     end
 })
 
-
 TeleportTab:AddButton({
     Name = "Teleport Gari",
     Callback = function()
@@ -409,7 +380,6 @@ TeleportTab:AddButton({
     end
 })
 
-
 TeleportTab:AddButton({
     Name = "Teleport PM",
     Callback = function()
@@ -423,7 +393,6 @@ TeleportTab:AddButton({
         players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-2165.34546, 3.01715183, -737.137878, -1, 0, 0, 0, 1, 0, 0, 0, -1))
     end
 })
-
 
 TeleportTab:AddButton({
     Name = "Teleport Mineração",
@@ -480,6 +449,8 @@ TeleportTab:AddButton({
         players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(2555.44263, 303.167755, -1004.13763, -0.422592998, 0, 0.906319618, 0, 1, 0, -0.906319618, 0, -0.422592998))
     end
 })
+
+-- MISCE
 
 local MiscTab = Window:MakeTab({
     Name = "Misc",
