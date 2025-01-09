@@ -1,5 +1,5 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
+local Window = OrionLib:MakeWindow({Name = "by ??", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
 ---loadstringuess
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sizerdev01/mdm.menu/refs/heads/main/aimbot"))()
 --// aimbot sett
