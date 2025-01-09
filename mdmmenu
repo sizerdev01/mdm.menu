@@ -1,5 +1,5 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
-local Window = OrionLib:MakeWindow({Name = "by shakaSilentAim", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
+local Window = OrionLib:MakeWindow({Name = "??", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
 IntroText = "O SHAKA EH MUITO FODA MERMO"
 local players = game:GetService("Players")
 local nameSize = 27 -- Tamanho padrão do ESP Name
