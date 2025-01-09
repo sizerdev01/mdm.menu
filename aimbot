@@ -6,25 +6,26 @@ local Camera = workspace.CurrentCamera
 
 local LocalPlayer = Players.LocalPlayer
 
---// Configurações
-local AimbotSettings = {
+--// Configurações padrão utilizando getgenv
+getgenv().AimbotSettings = getgenv().AimbotSettings or {
     FOV = 150, -- Tamanho do círculo FOV
     Smoothness = 0.2, -- Suavidade da mira (0 = instantâneo, 1 = muito lento)
-    TargetPart = "Head", -- Parte do corpo para mirar (exemplo: "Head", "Torso")
+    TargetPart = "Head", -- Parte do corpo para mirar
     Enabled = true, -- Ativar/Desativar o aimbot
 }
 
 --// Criar círculo FOV
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
-FOVCircle.Radius = AimbotSettings.FOV
+FOVCircle.Radius = getgenv().AimbotSettings.FOV
 FOVCircle.Color = Color3.new(1, 1, 1) -- Branco
 FOVCircle.Visible = true
 FOVCircle.Transparency = 1
 FOVCircle.Filled = false
 
---// Função para atualizar a posição do FOV
+--// Função para atualizar a posição e o tamanho do FOV
 local function UpdateFOV()
+    FOVCircle.Radius = getgenv().AimbotSettings.FOV -- Atualizar tamanho do FOV
     local CursorPosition = UserInputService:GetMouseLocation()
     FOVCircle.Position = CursorPosition
 end
@@ -36,7 +37,7 @@ local function IsInFOV(Target)
 
     local CursorPosition = UserInputService:GetMouseLocation()
     local Distance = (Vector2.new(ScreenPos.X, ScreenPos.Y) - CursorPosition).Magnitude
-    return Distance <= AimbotSettings.FOV
+    return Distance <= getgenv().AimbotSettings.FOV
 end
 
 --// Verificar se há uma parede entre o jogador e o alvo
@@ -60,8 +61,8 @@ local function GetClosestPlayer()
     local ShortestDistance = math.huge
 
     for _, Player in pairs(Players:GetPlayers()) do
-        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(AimbotSettings.TargetPart) then
-            local TargetPart = Player.Character[AimbotSettings.TargetPart]
+        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(getgenv().AimbotSettings.TargetPart) then
+            local TargetPart = Player.Character[getgenv().AimbotSettings.TargetPart]
             if IsInFOV(TargetPart) and HasClearLineOfSight(TargetPart) then
                 local Distance = (TargetPart.Position - Camera.CFrame.Position).Magnitude
                 if Distance < ShortestDistance then
@@ -83,7 +84,7 @@ local function SmoothAimAt(Target)
         local Difference = Vector2.new(TargetPos.X, TargetPos.Y) - CursorPosition
 
         -- Aplicar suavidade ao movimento
-        local SmoothStep = Difference * AimbotSettings.Smoothness
+        local SmoothStep = Difference * getgenv().AimbotSettings.Smoothness
         mousemoverel(SmoothStep.X, SmoothStep.Y)
     end
 end
@@ -110,7 +111,7 @@ end)
 RunService.RenderStepped:Connect(function()
     UpdateFOV()
 
-    if AimbotSettings.Enabled and IsAiming then
+    if getgenv().AimbotSettings.Enabled and IsAiming then
         if CurrentTarget and IsInFOV(CurrentTarget) and HasClearLineOfSight(CurrentTarget) then
             SmoothAimAt(CurrentTarget)
         else
