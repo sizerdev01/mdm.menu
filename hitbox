@@ -16,7 +16,7 @@ game:GetService('RunService').RenderStepped:Connect(function()
     for _, player in ipairs(game:GetService('Players'):GetPlayers()) do
         if player ~= localPlayer and (not getgenv().IsTeamCheckEnabled or player.Team ~= localPlayerTeam) then
             local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart then
+             if humanoidRootPart then
                 humanoidRootPart.Size = Vector3.new(getgenv().HeadSize, getgenv().HeadSize, getgenv().HeadSize)
                 humanoidRootPart.BrickColor = getgenv().BrickColor  -- Usando a cor configurada com getgenv
                 humanoidRootPart.Material = Enum.Material.Neon
