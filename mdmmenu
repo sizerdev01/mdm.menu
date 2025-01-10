@@ -1,6 +1,6 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "by ??", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
--- Carrega o script do aimbot
+---loadstringuess
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sizerdev01/mdm.menu/refs/heads/main/aimbot"))()
 --// aimbot sett
 getgenv().AimbotSettings.Smoothness = 0.1
@@ -8,6 +8,8 @@ getgenv().AimbotSettings.TargetPart = "Head"
 getgenv().AimbotSettings.Enabled = false
 getgenv().AimbotSettings.FOV = 40 -- não tocar
 getgenv().AimbotSettings.Visible = false
+-- Alterar para a tecla desejada
+
 ---
 local players = game:GetService("Players")
 local nameSize = 27 -- Tamanho padrão do ESP Name
