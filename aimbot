@@ -13,7 +13,7 @@ getgenv().AimbotSettings = getgenv().AimbotSettings or {
     TargetPart = "Head", -- Parte do corpo para mirar
     Enabled = true, -- Ativar/Desativar o aimbot
     Visible = true, -- Mostrar/Esconder o círculo FOV
-    ActivationKey = Enum.KeyCode.E, -- Tecla de ativação do aimbot
+    ActivationKey = Enum.KeyCode.MouseButton1, -- Botão esquerdo do mouse para ativação
 }
 
 --// Criar círculo FOV
@@ -98,13 +98,13 @@ local IsAiming = false
 
 --// Evento para ativar/desativar o aimbot
 UserInputService.InputBegan:Connect(function(Input)
-    if Input.KeyCode == getgenv().AimbotSettings.ActivationKey then
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
         IsAiming = true
     end
 end)
 
 UserInputService.InputEnded:Connect(function(Input)
-    if Input.KeyCode == getgenv().AimbotSettings.ActivationKey then
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
         IsAiming = false
         CurrentTarget = nil -- Resetar o alvo quando parar de mirar
     end
