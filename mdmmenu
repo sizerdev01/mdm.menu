@@ -8,9 +8,6 @@ getgenv().AimbotSettings.TargetPart = "Head"
 getgenv().AimbotSettings.Enabled = false
 getgenv().AimbotSettings.FOV = 40 -- não tocar
 getgenv().AimbotSettings.Visible = false
-getgenv().AimbotSettings.key = Enum.KeyCode.MouseButton1 -- Botão esquerdo do mouse
-
-
 ---
 local players = game:GetService("Players")
 local nameSize = 27 -- Tamanho padrão do ESP Name
