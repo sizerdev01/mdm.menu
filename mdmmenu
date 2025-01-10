@@ -8,6 +8,7 @@ getgenv().AimbotSettings.TargetPart = "Head"
 getgenv().AimbotSettings.Enabled = false
 getgenv().AimbotSettings.FOV = 40 -- não tocar
 getgenv().AimbotSettings.Visible = false
+getgenv().AimbotSettings.ActivationKey = Enum.KeyCode.F  -- Alterar para a tecla desejada
 
 ---
 local players = game:GetService("Players")
@@ -30,7 +31,7 @@ local function checkStaffTeam()
     for _, player in ipairs(Players:GetPlayers()) do
         if player.Team and player.Team.Name == teamName then
             -- Se encontrar um jogador na equipe STAFF, kicka o jogador local
-            localPlayer:Kick("Você foi kickado porque há um jogador na equipe STAFF.")
+            localPlayer:Kick("Você foi kickado porque há um jogador STAFF no servidor.")
             return
         end
     end
