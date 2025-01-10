@@ -1,33 +1,31 @@
---wdwwd
-~local Players = game:GetService("Players")
-~local RunService = game:GetService("RunService")
-~local UserInputService = game:GetService("UserInputService")
-~local Camera = workspace.CurrentCamera
-~
-~local LocalPlayer = Players.LocalPlayer
-~
-~--// Configurações padrão utilizando getgenv
-~getgenv().AimbotSettings = getgenv().AimbotSettings or {
-~    FOV = 150, -- Tamanho do círculo FOV
-~    Smoothness = 0.2, -- Suavidade da mira (0 = instantâneo, 1 = muito lento)
-~    TargetPart = "Head", -- Parte do corpo para mirar
-~    Enabled = true, -- Ativar/Desativar o aimbot
-~    Visible = true, -- Mostrar/Esconder o círculo FOV
-~}
-~
-~--// Criar círculo FOV
-~local FOVCircle = Drawing.new("Circle")
-~FOVCircle.Thickness = 1
-~FOVCircle.Radius = getgenv().AimbotSettings.FOV
-~FOVCircle.Color = Color3.new(1, 1, 1) -- Branco
-~FOVCircle.Visible = getgenv().AimbotSettings.Visible
-~FOVCircle.Transparency = 1
-~FOVCircle.Filled = false
+--// Serviços e variáveis iniciais
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+
+local LocalPlayer = Players.LocalPlayer
+
+--// Configurações padrão utilizando getgenv
+getgenv().AimbotSettings = getgenv().AimbotSettings or {
+    FOV = 150, -- Tamanho do círculo FOV
+    Smoothness = 0.2, -- Suavidade da mira (0 = instantâneo, 1 = muito lento)
+    TargetPart = "Head", -- Parte do corpo para mirar
+    Enabled = true, -- Ativar/Desativar o aimbot
+    Visible = true, -- Mostrar/Esconder o círculo FOV
+}
+
+--// Criar círculo FOV
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 1
+FOVCircle.Radius = getgenv().AimbotSettings.FOV
+FOVCircle.Color = Color3.new(1, 1, 1) -- Branco
+FOVCircle.Visible = getgenv().AimbotSettings.Visible
+FOVCircle.Transparency = 1
+FOVCircle.Filled = false
 
 --// Função para atualizar a posição, tamanho e visibilidade do FOV
 local function UpdateFOV()
-    FOVCircle.Radius = getgenv().AimbotSettings.FOV -- Atualizar tamanho do FOV dinamicamente
-    FOVCircle.Visible = getgenv().AimbotSettings.Visible -- Atualizar visibilidade do FOV dinamicamente
     local CursorPosition = UserInputService:GetMouseLocation()
     FOVCircle.Position = CursorPosition
     FOVCircle.Radius = getgenv().AimbotSettings.FOV
@@ -35,91 +33,91 @@ local function UpdateFOV()
 end
 
 --// Função para verificar se um jogador está dentro do FOV
-~local function IsInFOV(Target)
-~    local ScreenPos, OnScreen = Camera:WorldToViewportPoint(Target.Position)
-~    if not OnScreen then return false end
-~
-~    local CursorPosition = UserInputService:GetMouseLocation()
-~    local Distance = (Vector2.new(ScreenPos.X, ScreenPos.Y) - CursorPosition).Magnitude
-~    return Distance <= getgenv().AimbotSettings.FOV
-~end
-~
-~--// Verificar se há uma parede entre o jogador e o alvo
-~local function HasClearLineOfSight(Target)
-~    local Origin = Camera.CFrame.Position
-~    local Direction = (Target.Position - Origin).Unit
-~    local RaycastParams = RaycastParams.new()
-~    RaycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
-~    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-~    local RaycastResult = workspace:Raycast(Origin, Direction * 500, RaycastParams)
-~
-~    if RaycastResult then
-~        return RaycastResult.Instance:IsDescendantOf(Target.Parent)
-~    end
-~    return true
-~end
-~
-~--// Encontrar o jogador mais próximo dentro do FOV
-~local function GetClosestPlayer()
-~    local ClosestPlayer = nil
-~    local ShortestDistance = math.huge
-~
-~    for _, Player in pairs(Players:GetPlayers()) do
-~        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(getgenv().AimbotSettings.TargetPart) then
-~            local TargetPart = Player.Character[getgenv().AimbotSettings.TargetPart]
-~            if IsInFOV(TargetPart) and HasClearLineOfSight(TargetPart) then
-~                local Distance = (TargetPart.Position - Camera.CFrame.Position).Magnitude
-~                if Distance < ShortestDistance then
-~                    ShortestDistance = Distance
-~                    ClosestPlayer = TargetPart
-~                end
-~            end
-~        end
-~    end
-~
-~    return ClosestPlayer
-~end
-~
-~--// Função principal do aimbot com suavidade
-~local function SmoothAimAt(Target)
-~    if Target then
-~        local TargetPos = Camera:WorldToViewportPoint(Target.Position)
-~        local CursorPosition = UserInputService:GetMouseLocation()
-~        local Difference = Vector2.new(TargetPos.X, TargetPos.Y) - CursorPosition
-~
-~        -- Aplicar suavidade ao movimento
-~        local SmoothStep = Difference * getgenv().AimbotSettings.Smoothness
-~        mousemoverel(SmoothStep.X, SmoothStep.Y)
-~    end
-~end
-~
-~--// Variáveis para armazenar o alvo atual
-~local CurrentTarget = nil
-~local IsAiming = false
-~
-~--// Evento para ativar/desativar o aimbot
-~UserInputService.InputBegan:Connect(function(Input)
-~    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-~        IsAiming = true
-~    end
-~end)
-~
-~UserInputService.InputEnded:Connect(function(Input)
-~    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-~        IsAiming = false
-~        CurrentTarget = nil -- Resetar o alvo quando parar de mirar
-~    end
-~end)
-~
-~--// Loop principal
-~RunService.RenderStepped:Connect(function()
-~    UpdateFOV()
-~
-~    if getgenv().AimbotSettings.Enabled and IsAiming then
-~        if CurrentTarget and IsInFOV(CurrentTarget) and HasClearLineOfSight(CurrentTarget) then
-~            SmoothAimAt(CurrentTarget)
-~        else
-~            CurrentTarget = GetClosestPlayer()
-~        end
-~    end
-~end)
+local function IsInFOV(Target)
+    local ScreenPos, OnScreen = Camera:WorldToViewportPoint(Target.Position)
+    if not OnScreen then return false end
+
+    local CursorPosition = UserInputService:GetMouseLocation()
+    local Distance = (Vector2.new(ScreenPos.X, ScreenPos.Y) - CursorPosition).Magnitude
+    return Distance <= getgenv().AimbotSettings.FOV
+end
+
+--// Verificar se há uma parede entre o jogador e o alvo
+local function HasClearLineOfSight(Target)
+    local Origin = Camera.CFrame.Position
+    local Direction = (Target.Position - Origin).Unit
+    local RaycastParams = RaycastParams.new()
+    RaycastParams.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+    RaycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    local RaycastResult = workspace:Raycast(Origin, Direction * 500, RaycastParams)
+
+    if RaycastResult then
+        return RaycastResult.Instance:IsDescendantOf(Target.Parent)
+    end
+    return true
+end
+
+--// Encontrar o jogador mais próximo dentro do FOV
+local function GetClosestPlayer()
+    local ClosestPlayer = nil
+    local ShortestDistance = math.huge
+
+    for _, Player in pairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(getgenv().AimbotSettings.TargetPart) then
+            local TargetPart = Player.Character[getgenv().AimbotSettings.TargetPart]
+            if IsInFOV(TargetPart) and HasClearLineOfSight(TargetPart) then
+                local Distance = (TargetPart.Position - Camera.CFrame.Position).Magnitude
+                if Distance < ShortestDistance then
+                    ShortestDistance = Distance
+                    ClosestPlayer = TargetPart
+                end
+            end
+        end
+    end
+
+    return ClosestPlayer
+end
+
+--// Função principal do aimbot com suavidade
+local function SmoothAimAt(Target)
+    if Target then
+        local TargetPos = Camera:WorldToViewportPoint(Target.Position)
+        local CursorPosition = UserInputService:GetMouseLocation()
+        local Difference = Vector2.new(TargetPos.X, TargetPos.Y) - CursorPosition
+
+        -- Aplicar suavidade ao movimento
+        local SmoothStep = Difference * getgenv().AimbotSettings.Smoothness
+        mousemoverel(SmoothStep.X, SmoothStep.Y)
+    end
+end
+
+--// Variáveis para armazenar o alvo atual
+local CurrentTarget = nil
+local IsAiming = false
+
+--// Evento para ativar/desativar o aimbot
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        IsAiming = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        IsAiming = false
+        CurrentTarget = nil -- Resetar o alvo quando parar de mirar
+    end
+end)
+
+--// Loop principal
+RunService.RenderStepped:Connect(function()
+    UpdateFOV()
+
+    if getgenv().AimbotSettings.Enabled and IsAiming then
+        if CurrentTarget and IsInFOV(CurrentTarget) and HasClearLineOfSight(CurrentTarget) then
+            SmoothAimAt(CurrentTarget)
+        else
+            CurrentTarget = GetClosestPlayer()
+        end
+    end
+end)
