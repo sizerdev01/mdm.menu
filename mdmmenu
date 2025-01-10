@@ -1,6 +1,6 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "by ??", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
----loadstringuess
+-- Carrega o script do aimbot
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sizerdev01/mdm.menu/refs/heads/main/aimbot"))()
 --// aimbot sett
 getgenv().AimbotSettings.Smoothness = 0.1
@@ -8,7 +8,8 @@ getgenv().AimbotSettings.TargetPart = "Head"
 getgenv().AimbotSettings.Enabled = false
 getgenv().AimbotSettings.FOV = 40 -- não tocar
 getgenv().AimbotSettings.Visible = false
-getgenv().AimbotSettings.ActivationKey = Enum.KeyCode.F  -- Alterar para a tecla desejada
+getgenv().AimbotSettings.key = Enum.KeyCode.MouseButton1 -- Botão esquerdo do mouse
+
 
 ---
 local players = game:GetService("Players")
