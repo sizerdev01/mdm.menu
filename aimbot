@@ -6,22 +6,19 @@ local Camera = workspace.CurrentCamera
 
 local LocalPlayer = Players.LocalPlayer
 
---// Configurações padrão utilizando getgenv
-getgenv().AimbotSettings = getgenv().AimbotSettings or {
-    FOV = 150, -- Tamanho do círculo FOV
-    Smoothness = 0.2, -- Suavidade da mira (0 = instantâneo, 1 = muito lento)
-    TargetPart = "Head", -- Parte do corpo para mirar
-    Enabled = true, -- Ativar/Desativar o aimbot
-    Visible = true, -- Mostrar/Esconder o círculo FOV
-    ActivationKey = Enum.KeyCode.MouseButton1, -- Botão esquerdo do mouse para ativação
-}
+--// Configurações padrão
+local FOV = 150 -- Tamanho do círculo FOV
+local Smoothness = 0.2 -- Suavidade da mira (0 = instantâneo, 1 = muito lento)
+local TargetPart = "Head" -- Parte do corpo para mirar
+local Enabled = true -- Ativar/Desativar o aimbot
+local Visible = true -- Mostrar/Esconder o círculo FOV
 
 --// Criar círculo FOV
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 1
-FOVCircle.Radius = getgenv().AimbotSettings.FOV
+FOVCircle.Radius = FOV
 FOVCircle.Color = Color3.new(1, 1, 1) -- Branco
-FOVCircle.Visible = getgenv().AimbotSettings.Visible
+FOVCircle.Visible = Visible
 FOVCircle.Transparency = 1
 FOVCircle.Filled = false
 
@@ -29,8 +26,8 @@ FOVCircle.Filled = false
 local function UpdateFOV()
     local CursorPosition = UserInputService:GetMouseLocation()
     FOVCircle.Position = CursorPosition
-    FOVCircle.Radius = getgenv().AimbotSettings.FOV
-    FOVCircle.Visible = getgenv().AimbotSettings.Visible -- Atualizar visibilidade dinamicamente
+    FOVCircle.Radius = FOV
+    FOVCircle.Visible = Visible -- Atualizar visibilidade dinamicamente
 end
 
 --// Função para verificar se um jogador está dentro do FOV
@@ -40,7 +37,7 @@ local function IsInFOV(Target)
 
     local CursorPosition = UserInputService:GetMouseLocation()
     local Distance = (Vector2.new(ScreenPos.X, ScreenPos.Y) - CursorPosition).Magnitude
-    return Distance <= getgenv().AimbotSettings.FOV
+    return Distance <= FOV
 end
 
 --// Verificar se há uma parede entre o jogador e o alvo
@@ -64,13 +61,13 @@ local function GetClosestPlayer()
     local ShortestDistance = math.huge
 
     for _, Player in pairs(Players:GetPlayers()) do
-        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(getgenv().AimbotSettings.TargetPart) then
-            local TargetPart = Player.Character[getgenv().AimbotSettings.TargetPart]
-            if IsInFOV(TargetPart) and HasClearLineOfSight(TargetPart) then
-                local Distance = (TargetPart.Position - Camera.CFrame.Position).Magnitude
+        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(TargetPart) then
+            local TargetPartInstance = Player.Character[TargetPart]
+            if IsInFOV(TargetPartInstance) and HasClearLineOfSight(TargetPartInstance) then
+                local Distance = (TargetPartInstance.Position - Camera.CFrame.Position).Magnitude
                 if Distance < ShortestDistance then
                     ShortestDistance = Distance
-                    ClosestPlayer = TargetPart
+                    ClosestPlayer = TargetPartInstance
                 end
             end
         end
@@ -87,7 +84,7 @@ local function SmoothAimAt(Target)
         local Difference = Vector2.new(TargetPos.X, TargetPos.Y) - CursorPosition
 
         -- Aplicar suavidade ao movimento
-        local SmoothStep = Difference * getgenv().AimbotSettings.Smoothness
+        local SmoothStep = Difference * Smoothness
         mousemoverel(SmoothStep.X, SmoothStep.Y)
     end
 end
@@ -96,7 +93,7 @@ end
 local CurrentTarget = nil
 local IsAiming = false
 
---// Evento para ativar/desativar o aimbot
+--// Evento para ativar/desativar o aimbot com o botão esquerdo do mouse
 UserInputService.InputBegan:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.MouseButton1 then
         IsAiming = true
@@ -114,7 +111,7 @@ end)
 RunService.RenderStepped:Connect(function()
     UpdateFOV()
 
-    if getgenv().AimbotSettings.Enabled and IsAiming then
+    if Enabled and IsAiming then
         if CurrentTarget and IsInFOV(CurrentTarget) and HasClearLineOfSight(CurrentTarget) then
             SmoothAimAt(CurrentTarget)
         else
