@@ -1,6 +1,6 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "by ??", HidePremium = false, SaveConfig = true, ConfigFolder = "FarmConfig"})
----loadstringuess
+-- Carrega o script do aimbot
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sizerdev01/mdm.menu/refs/heads/main/aimbot"))()
 --// aimbot sett
 getgenv().AimbotSettings.Smoothness = 0.1
@@ -8,8 +8,6 @@ getgenv().AimbotSettings.TargetPart = "Head"
 getgenv().AimbotSettings.Enabled = false
 getgenv().AimbotSettings.FOV = 40 -- não tocar
 getgenv().AimbotSettings.Visible = false
--- Alterar para a tecla desejada
-
 ---
 local players = game:GetService("Players")
 local nameSize = 27 -- Tamanho padrão do ESP Name
@@ -355,6 +353,43 @@ PlayerDropdown = vis:AddDropdown({
         end
     end
 })
+
+-- Definir configurações da HealthBar
+getgenv().Settings = {
+    HealthBar_Enabled = false,     -- Ativar/Desativar HealthBar
+    HealthBar_Color = Color3.fromRGB(0, 255, 0), -- Cor da Barra de Saúde (Verde)
+}
+
+-- Função para ativar/desativar a HealthBar
+local function ToggleHealthBar()
+    getgenv().Settings.HealthBar_Enabled = not getgenv().Settings.HealthBar_Enabled
+    if getgenv().Settings.HealthBar_Enabled then
+        -- Carregar o script da healthbar do repositório quando ativar
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/sizerdev01/mdm.menu/refs/heads/main/healthbar"))()
+        print("HealthBar ativada!")
+    else
+        -- Caso contrário, a healthbar será desativada e podemos manipular isso.
+        print("HealthBar desativada!")
+    end
+end
+
+-- Botão para ativar/desativar a HealthBar
+vis:AddButton({
+    Name = "Ativar helthbar/ irreversivel",
+    Callback = ToggleHealthBar
+})
+
+-- AQUI COMEÇA A LÓGICA DE ESP COM A HEALTHBAR
+
+-- Verificar a cada `RenderStepped` se a HealthBar está ativa ou não
+game:GetService("RunService").Heartbeat:Connect(function()
+    if getgenv().Settings.HealthBar_Enabled then
+        -- A healthbar está ativa e foi carregada através do toggle
+        -- O código do ESP já está dentro do loadstring, não precisamos recriar aqui.
+    else
+        -- A healthbar está desativada, apenas monitore o estado.
+    end
+end)
 
 local isESPNameActive = false
 vis:AddToggle({
