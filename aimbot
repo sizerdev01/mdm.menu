@@ -6,14 +6,13 @@ local Camera = workspace.CurrentCamera
 
 local LocalPlayer = Players.LocalPlayer
 
---// Configurações padrão utilizando getgenv
 getgenv().AimbotSettings = getgenv().AimbotSettings or {
-    FOV = 150, -- Tamanho do círculo FOV
-    Smoothness = 0.2, -- Suavidade da mira (0 = instantâneo, 1 = muito lento)
-    TargetPart = "Head", -- Parte do corpo para mirar
-    Enabled = true, -- Ativar/Desativar o aimbot
-    Visible = true, -- Mostrar/Esconder o círculo FOV
-    ToggleKey = Enum.KeyCode.Q, -- Tecla para ativar o aimbot (agora é 'Q')
+    FOV = 150,
+    Smoothness = 0.2,
+    TargetPart = "Head",
+    Enabled = true,
+    Visible = true,
+    ToggleKey = Enum.KeyCode.X -- Tecla padrão
 }
 
 --// Criar círculo FOV
