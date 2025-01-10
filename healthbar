@@ -1,0 +1,89 @@
+-- Definir configurações através de getgenv
+getgenv().Settings = {
+    HealthBar_Enabled = true,     -- Ativar/Desativar HealthBar
+    HealthBar_Color = Color3.fromRGB(0, 255, 0), -- Cor da Barra de Saúde (Verde)
+}
+
+local player = game:GetService("Players").LocalPlayer
+local camera = game:GetService("Workspace").CurrentCamera
+
+local function NewLine(thickness, color)
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.From = Vector2.new(0, 0)
+    line.To = Vector2.new(0, 0)
+    line.Color = color
+    line.Thickness = thickness
+    line.Transparency = 1
+    return line
+end
+
+local function Visibility(state, lib)
+    for _, x in pairs(lib) do
+        x.Visible = state
+    end
+end
+
+local function ESP(plr)
+    local library = {
+        -- Health Bar
+        healthbar = NewLine(3, Color3.fromRGB(0, 0, 0)),
+        greenhealth = NewLine(1.5, getgenv().Settings.HealthBar_Color)
+    }
+
+    local function Updater()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") then
+                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
+                    local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
+
+                    -- Health Bar
+                    if getgenv().Settings.HealthBar_Enabled then
+                        local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)).magnitude
+                        local healthoffset = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth * d
+
+                        library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
+                        library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 - healthoffset)
+
+                        library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
+                        library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY * 2)
+                    end
+
+                    -- Exibe a Health Bar
+                    Visibility(true, library)
+                else
+                    -- Ocultar a Health Bar quando o jogador sair da tela
+                    Visibility(false, library)
+                end
+            else
+                -- Ocultar a Health Bar quando o jogador morrer ou não existir
+                Visibility(false, library)
+                if game.Players:FindFirstChild(plr.Name) == nil then
+                    connection:Disconnect()  -- Desconectar se o jogador não estiver mais presente
+                    -- Apagar os desenhos para garantir que não fiquem na tela
+                    for _, item in pairs(library) do
+                        item:Remove()
+                    end
+                end
+            end
+        end)
+    end
+    coroutine.wrap(Updater)()
+end
+
+-- Inicia o ESP para todos os jogadores
+for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+    if v.Name ~= player.Name then
+        coroutine.wrap(ESP)(v)
+    end
+end
+
+-- Atualiza quando novos jogadores entrarem
+game.Players.PlayerAdded:Connect(function(newplr)
+    if newplr.Name ~= player.Name then
+        coroutine.wrap(ESP)(newplr)
+    end
+end)
