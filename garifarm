@@ -41,7 +41,7 @@ local function findNextLEXOS()
 end
 
 -- Função para iniciar o farm
-local function startFarm()
+function startFarm()
     getgenv().FarmActive = true
     makePlayerInvisible()
     while getgenv().FarmActive do
@@ -63,14 +63,7 @@ local function startFarm()
 end
 
 -- Função para parar o farm
-local function stopFarm()
+function stopFarm()
     getgenv().FarmActive = false
     restorePlayerVisibility()
-end
-
--- Comandos para ativar/desativar o farm
-if getgenv().FarmActive then
-    stopFarm()
-else
-    startFarm()
 end
