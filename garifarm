@@ -1,0 +1,74 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local FarmActive = false
+
+-- Função para tornar o jogador invisível
+local function makePlayerInvisible()
+    for _, part in ipairs(Character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 1
+            part.CanCollide = false
+        elseif part:IsA("Decal") or part:IsA("Texture") then
+            part.Transparency = 1
+        end
+    end
+end
+
+-- Função para restaurar a visibilidade do jogador
+local function restorePlayerVisibility()
+    for _, part in ipairs(Character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 0
+            part.CanCollide = true
+        elseif part:IsA("Decal") or part:IsA("Texture") then
+            part.Transparency = 0
+        end
+    end
+end
+
+-- Função para encontrar o próximo LEXOS com CanCollide ativo
+local function findNextLEXOS()
+    for _, lexos in ipairs(Workspace.MapaGeral.Gari.Lixos:GetChildren()) do
+        if lexos:IsA("BasePart") and lexos.CanCollide then
+            return lexos
+        end
+    end
+    return nil
+end
+
+-- Função para iniciar o farm
+local function startFarm()
+    FarmActive = true
+    makePlayerInvisible()
+    while FarmActive do
+        local lexos = findNextLEXOS()
+        if lexos then
+            -- Teleporte instantâneo para o LEXOS
+            HumanoidRootPart.CFrame = lexos.CFrame
+            local proximityPrompt = lexos:FindFirstChildOfClass("ProximityPrompt")
+            if proximityPrompt then
+                -- Spamma o ProximityPrompt até que o CanCollide seja desativado
+                while lexos.CanCollide and FarmActive do
+                    fireproximityprompt(proximityPrompt, 1)
+                    task.wait(0.00001) -- Acelera o spam
+                end
+            end
+        else
+            task.wait(0.1) -- Espera para reavaliar a situação
+        end
+    end
+    restorePlayerVisibility()
+end
+
+-- Função para parar o farm
+local function stopFarm()
+    FarmActive = false
+    restorePlayerVisibility()
+end
+
+-- Exemplo de ativação do farm (pode ser manual ou outro tipo de ativação)
+startFarm()  -- Inicia o farm
+-- stopFarm() -- Chame esta função quando quiser parar o farm
