@@ -103,7 +103,7 @@ UserInputService.InputBegan:Connect(function(Input)
 end)
 
 UserInputService.InputEnded:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if Input.UserInputType == Enum.UserInputType.X then
         IsAiming = false
         CurrentTarget = nil -- Resetar o alvo quando parar de mirar
     end
